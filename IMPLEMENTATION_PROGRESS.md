@@ -1,4 +1,4 @@
-# Tonzies Implementation Progress
+# Jelmore Implementation Progress
 
 ## ✅ Phase 1: Foundation & Infrastructure - COMPLETE
 
@@ -69,7 +69,7 @@
 ### Quick Start Commands:
 ```bash
 # Navigate to project
-cd /home/delorenj/code/projects/33GOD/tonzies
+cd /home/delorenj/code/projects/33GOD/jelmore
 
 # Full setup
 make setup

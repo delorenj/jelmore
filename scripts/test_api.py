@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Quick test script for Tonzies API
+Quick test script for Jelmore API
 """
 import asyncio
 import httpx
 import json
 
 
-async def test_tonzies():
-    """Test basic Tonzies functionality"""
+async def test_jelmore():
+    """Test basic Jelmore functionality"""
     
     base_url = "http://localhost:8000"
     
@@ -57,4 +57,4 @@ async def test_tonzies():
 
 
 if __name__ == "__main__":
-    asyncio.run(test_tonzies())
+    asyncio.run(test_jelmore())

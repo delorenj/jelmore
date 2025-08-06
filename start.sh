@@ -1,9 +1,9 @@
 #!/usr/bin/env zsh
 """
-Quick start script for Tonzies
+Quick start script for Jelmore
 """
 
-echo "🚀 Starting Tonzies..."
+echo "🚀 Starting Jelmore..."
 
 # Check if docker services are running
 echo "📦 Checking Docker services..."
@@ -38,5 +38,5 @@ fi
 # Run migrations (once we add Alembic)
 # alembic upgrade head
 
-echo "✅ Starting Tonzies server..."
+echo "✅ Starting Jelmore server..."
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000

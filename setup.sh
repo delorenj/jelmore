@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-# mise configuration for Tonzies project
+# mise configuration for Jelmore project
 mise install python@3.12
 mise use python@3.12
 
@@ -11,5 +11,5 @@ uv venv
 source .venv/bin/activate
 uv pip install -e ".[dev]"
 
-echo "✅ Tonzies environment setup complete!"
+echo "✅ Jelmore environment setup complete!"
 echo "Run 'source .venv/bin/activate' to activate the environment"

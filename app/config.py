@@ -1,5 +1,5 @@
 """
-Tonzies Configuration Settings
+Jelmore Configuration Settings
 """
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
     
     # Application
-    app_name: str = "Tonzies"
+    app_name: str = "Jelmore"
     app_version: str = "0.1.0"
     debug: bool = Field(default=False, description="Debug mode")
     log_level: str = Field(default="INFO", description="Logging level")
@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     # Database
     postgres_host: str = Field(default="localhost", description="PostgreSQL host")
     postgres_port: int = Field(default=5432, description="PostgreSQL port")
-    postgres_user: str = Field(default="tonzies", description="PostgreSQL user")
-    postgres_password: str = Field(default="tonzies_dev", description="PostgreSQL password")
-    postgres_db: str = Field(default="tonzies", description="PostgreSQL database")
+    postgres_user: str = Field(default="jelmore", description="PostgreSQL user")
+    postgres_password: str = Field(default="jelmore_dev", description="PostgreSQL password")
+    postgres_db: str = Field(default="jelmore", description="PostgreSQL database")
     
     @property
     def database_url(self) -> str:
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     
     # NATS
     nats_url: str = Field(default="nats://localhost:4222", description="NATS server URL")
-    nats_subject_prefix: str = Field(default="tonzies", description="NATS subject prefix")
+    nats_subject_prefix: str = Field(default="jelmore", description="NATS subject prefix")
     
     # Claude Code
     claude_code_bin: str = Field(default="claude", description="Claude Code binary path")

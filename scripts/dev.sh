@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Tonzies Development Helper Script
+# Jelmore Development Helper Script
 
 set -e
 
@@ -26,7 +26,7 @@ function print_warning() {
 }
 
 function show_help() {
-    echo "Tonzies Development Helper"
+    echo "Jelmore Development Helper"
     echo ""
     echo "Usage: ./scripts/dev.sh [command]"
     echo ""
@@ -46,7 +46,7 @@ function show_help() {
 
 
 function setup() {
-    print_info "Setting up Tonzies..."
+    print_info "Setting up Jelmore..."
     
     # Copy env file if it doesn't exist
     if [ ! -f .env ]; then
@@ -114,7 +114,7 @@ function format() {
 function api() {
     print_info "Starting API server..."
     source .venv/bin/activate 2>/dev/null || true
-    uvicorn src.tonzies.main:app --reload --host 0.0.0.0 --port 8000
+    uvicorn src.jelmore.main:app --reload --host 0.0.0.0 --port 8000
 }
 
 function shell() {

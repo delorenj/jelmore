@@ -1,5 +1,5 @@
 [project]
-name = "tonzies"
+name = "jelmore"
 version = "0.1.0"
 description = "Claude Code Session Manager - FastAPI service for managing long-lived Claude Code sessions"
 readme = "README.md"

@@ -1,10 +1,10 @@
-# Tonzies - Claude Code Session Manager
+# Jelmore - Claude Code Session Manager
 
 > FastAPI service that exposes the claude-code SDK to allow spawning personal account token-authenticated long-lived Claude Code sessions via HTTP request.
 
 ## Overview
 
-Tonzies is the foundational runtime layer for the 33GOD agentic pipeline system. It provides HTTP API access to Claude Code, enabling programmatic management of AI coding sessions with comprehensive event tracking and state management.
+Jelmore is the foundational runtime layer for the 33GOD agentic pipeline system. It provides HTTP API access to Claude Code, enabling programmatic management of AI coding sessions with comprehensive event tracking and state management.
 
 ## Features
 
@@ -37,7 +37,7 @@ Tonzies is the foundational runtime layer for the 33GOD agentic pipeline system.
 
 1. **Clone and navigate to the project**:
 ```bash
-cd /home/delorenj/code/projects/33GOD/tonzies
+cd /home/delorenj/code/projects/33GOD/jelmore
 ```
 
 2. **Run the setup script**:
@@ -142,24 +142,3 @@ Once running, visit:
 - ReDoc: http://localhost:8000/api/v1/redoc
 
 ## Architecture
-
-```
-┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
-│   FastAPI App   │────▶│ Claude Code  │────▶│    NATS     │
-│                 │     │   Subprocess │     │   Event Bus │
-└────────┬────────┘     └──────────────┘     └─────────────┘
-         │
-         ▼
-┌─────────────────┐     ┌──────────────┐
-│   PostgreSQL    │     │    Redis     │
-│   (Metadata)    │     │   (Cache)    │
-└─────────────────┘     └──────────────┘
-```
-
-## License
-
-Part of the 33GOD project - Private
-
-## Author
-
-Jarad (@delorenj)

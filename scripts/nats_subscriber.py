@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 NATS Event Subscriber
-Test script to monitor events from Tonzies
+Test script to monitor events from Jelmore
 """
 import asyncio
 import json
@@ -10,17 +10,17 @@ from nats import connect
 
 
 async def main():
-    """Subscribe to Tonzies events"""
+    """Subscribe to Jelmore events"""
     
     # Connect to NATS
     nc = await connect("nats://localhost:4222")
     js = nc.jetstream()
     
-    print("📡 Listening for Tonzies events...")
+    print("📡 Listening for Jelmore events...")
     print("-" * 50)
     
-    # Subscribe to all Tonzies events
-    sub = await js.subscribe("tonzies.>", stream="TONZIES")
+    # Subscribe to all Jelmore events
+    sub = await js.subscribe("jelmore.>", stream="JELMORE")
     
     try:
         async for msg in sub.messages:

@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: tonzies
-      POSTGRES_PASSWORD: tonzies_dev
-      POSTGRES_DB: tonzies
+      POSTGRES_USER: jelmore
+      POSTGRES_PASSWORD: jelmore_dev
+      POSTGRES_DB: jelmore
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tonzies"]
+      test: ["CMD-SHELL", "pg_isready -U jelmore"]
       interval: 5s
       timeout: 5s
       retries: 5

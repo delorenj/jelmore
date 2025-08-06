@@ -1,4 +1,4 @@
-"""Configuration management for Tonzies"""
+"""Configuration management for Jelmore"""
 
 from functools import lru_cache
 from typing import List
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: PostgresDsn = Field(
-        default="postgresql+asyncpg://tonzies:tonzies123@localhost:5432/tonzies",
+        default="postgresql+asyncpg://jelmore:jelmore123@localhost:5432/jelmore",
         description="PostgreSQL connection URL",
     )
     database_pool_size: int = Field(default=20, description="Database pool size")
@@ -38,8 +38,8 @@ class Settings(BaseSettings):
 
     # NATS
     nats_url: str = Field(default="nats://localhost:4222", description="NATS server URL")
-    nats_cluster_id: str = Field(default="tonzies-cluster", description="NATS cluster ID")
-    nats_client_id: str = Field(default="tonzies-api", description="NATS client ID")
+    nats_cluster_id: str = Field(default="jelmore-cluster", description="NATS cluster ID")
+    nats_client_id: str = Field(default="jelmore-api", description="NATS client ID")
 
     # Claude Code Settings
     claude_code_bin: str = Field(default="claude", description="Claude Code binary path")

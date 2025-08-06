@@ -20,4 +20,4 @@ RUN mkdir -p /app/logs
 
 EXPOSE 8687
 
-CMD ["uvicorn", "src.tonzies.main:app", "--host", "0.0.0.0", "--port", "8687"]
+CMD ["uvicorn", "src.jelmore.main:app", "--host", "0.0.0.0", "--port", "8687"]
