@@ -8,12 +8,14 @@ RUN apt-get update && apt-get install -y \
   postgresql-client \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy requirements first for better layer caching
 COPY pyproject.toml .
-COPY src/ ./src/
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -e .
+# Install Python dependencies (not editable in container)
+RUN pip install --no-cache-dir fastapi>=0.115.0 uvicorn[standard]>=0.32.0 sqlalchemy>=2.0.0 alembic>=1.13.0 asyncpg>=0.30.0 redis>=5.2.0 nats-py>=2.10.0 pydantic>=2.10.0 pydantic-settings>=2.0.0 python-dotenv>=1.0.0 httpx>=0.28.0 websockets>=14.0 structlog>=24.0.0 python-multipart>=0.0.20
+
+# Copy source code
+COPY src/ ./src/
 
 # Create logs directory
 RUN mkdir -p /app/logs

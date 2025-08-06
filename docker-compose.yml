@@ -1,45 +1,232 @@
 services:
+  # Traefik reverse proxy
+  traefik:
+    image: traefik:v3.0
+    container_name: jelmore-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard (disable in production)
+    environment:
+      - CF_API_EMAIL=${CLOUDFLARE_EMAIL:-}
+      - CF_DNS_API_TOKEN=${CLOUDFLARE_API_TOKEN:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./src/jelmore/infrastructure/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./src/jelmore/infrastructure/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - traefik_data:/data
+    labels:
+      - "traefik.enable=true"
+      # Dashboard
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.jelmore.local`) || Host(`traefik.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.middlewares=admin-auth@file"
+    networks:
+      - 33god_network
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Jelmore API service
+  jelmore:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: jelmore-api
+    restart: unless-stopped
+    environment:
+      # Database
+      - DATABASE_URL=postgresql+asyncpg://jelmore:${POSTGRES_PASSWORD:-jelmore_dev}@postgres:5432/jelmore
+      - DATABASE_POOL_SIZE=20
+      - DATABASE_MAX_OVERFLOW=40
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_MAX_CONNECTIONS=50
+      
+      # NATS
+      - NATS_URL=nats://nats:4222
+      - NATS_CLUSTER_ID=jelmore-cluster
+      - NATS_CLIENT_ID=jelmore-api
+      
+      # API Configuration
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_PREFIX=/api/v1
+      
+      # Authentication
+      - API_KEY_ADMIN=${API_KEY_ADMIN:-}
+      - API_KEY_CLIENT=${API_KEY_CLIENT:-}
+      - API_KEY_READONLY=${API_KEY_READONLY:-}
+      - API_KEY_HEADER=X-API-Key
+      
+      # Session Management
+      - MAX_CONCURRENT_SESSIONS=50
+      - SESSION_CLEANUP_INTERVAL_SECONDS=300
+      - SESSION_DEFAULT_TIMEOUT_SECONDS=7200
+      
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=json
+      
+      # CORS
+      - CORS_ORIGINS=https://33god.com,https://*.33god.com,http://localhost:3000,http://localhost:3360
+      
+      # Claude Code
+      - CLAUDE_CODE_BIN=claude
+      - CLAUDE_CODE_MAX_TURNS=20
+      - CLAUDE_CODE_TIMEOUT_SECONDS=600
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      # HTTP Router
+      - "traefik.http.routers.jelmore.rule=Host(`jelmore.local`) || Host(`api.${DOMAIN:-localhost}`) || Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.jelmore.service=jelmore"
+      - "traefik.http.routers.jelmore.tls=true"
+      - "traefik.http.routers.jelmore.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.jelmore.middlewares=security-headers@file,rate-limit@file,gzip-compression@file"
+      
+      # API Router (more restrictive)
+      - "traefik.http.routers.jelmore-api.rule=(Host(`jelmore.local`) || Host(`api.${DOMAIN:-localhost}`) || Host(`${DOMAIN:-localhost}`)) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.jelmore-api.service=jelmore"
+      - "traefik.http.routers.jelmore-api.tls=true"  
+      - "traefik.http.routers.jelmore-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.jelmore-api.middlewares=security-headers@file,api-rate-limit@file,api-cors@file,gzip-compression@file,circuit-breaker@file"
+      - "traefik.http.routers.jelmore-api.priority=100"
+      
+      # Health Check Router (no auth, minimal middleware)
+      - "traefik.http.routers.jelmore-health.rule=(Host(`jelmore.local`) || Host(`api.${DOMAIN:-localhost}`) || Host(`${DOMAIN:-localhost}`)) && Path(`/health`)"
+      - "traefik.http.routers.jelmore-health.service=jelmore"
+      - "traefik.http.routers.jelmore-health.middlewares=security-headers@file"
+      - "traefik.http.routers.jelmore-health.priority=200"
+      
+      # Service Configuration
+      - "traefik.http.services.jelmore.loadbalancer.server.port=8000"
+      - "traefik.http.services.jelmore.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.jelmore.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.jelmore.loadbalancer.healthcheck.timeout=5s"
+      - "traefik.http.services.jelmore.loadbalancer.healthcheck.scheme=http"
+      
+      # Load Balancer Settings
+      - "traefik.http.services.jelmore.loadbalancer.sticky.cookie=true"
+      - "traefik.http.services.jelmore.loadbalancer.sticky.cookie.name=jelmore_session"
+      - "traefik.http.services.jelmore.loadbalancer.sticky.cookie.secure=true"
+      - "traefik.http.services.jelmore.loadbalancer.sticky.cookie.httponly=true"
+      
+      # Metrics and Monitoring
+      - "traefik.http.routers.jelmore-metrics.rule=(Host(`jelmore.local`) || Host(`api.${DOMAIN:-localhost}`)) && Path(`/metrics`)"
+      - "traefik.http.routers.jelmore-metrics.service=jelmore"
+      - "traefik.http.routers.jelmore-metrics.middlewares=admin-auth@file"
+    networks:
+      - 33god_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL database
   postgres:
     image: postgres:16-alpine
+    container_name: jelmore-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: jelmore
-      POSTGRES_PASSWORD: jelmore_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jelmore_dev}
       POSTGRES_DB: jelmore
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - 33god_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jelmore"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U jelmore -d jelmore"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
+  # Redis cache and session store
   redis:
     image: redis:7-alpine
+    container_name: jelmore-redis
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+      - ./src/jelmore/infrastructure/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - 33god_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 
+  # NATS message broker
   nats:
     image: nats:2.10-alpine
+    container_name: jelmore-nats
+    restart: unless-stopped
     ports:
-      - "4222:4222"  # Client connections
-      - "8222:8222"  # HTTP monitoring
-    command: ["-js", "-m", "8222"]  # Enable JetStream
+      - "${NATS_CLIENT_PORT:-4222}:4222"  # Client connections
+      - "${NATS_HTTP_PORT:-8222}:8222"    # HTTP monitoring
+    command: ["-js", "-m", "8222", "-D"]  # JetStream + Debug
+    volumes:
+      - nats_data:/data
+    labels:
+      - "traefik.enable=true"
+      # Monitoring interface
+      - "traefik.http.routers.nats-mon.rule=Host(`nats.jelmore.local`) || Host(`nats.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.nats-mon.service=nats-mon"
+      - "traefik.http.routers.nats-mon.middlewares=admin-auth@file"
+      - "traefik.http.services.nats-mon.loadbalancer.server.port=8222"
+    networks:
+      - 33god_network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8222/healthz"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 
+# Networks
+networks:
+  33god_network:
+    driver: bridge
+    name: 33god_network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volumes  
 volumes:
   postgres_data:
+    name: jelmore_postgres_data
   redis_data:
+    name: jelmore_redis_data
+  nats_data:
+    name: jelmore_nats_data
+  traefik_data:
+    name: jelmore_traefik_data

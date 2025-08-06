@@ -1,0 +1,88 @@
+"""Traefik configuration for Jelmore production deployment
+
+This file contains the Traefik configuration that enables:
+- Service discovery
+- Load balancing  
+- SSL/TLS termination
+- Health checks
+- Request routing
+"""
+
+# Global Configuration
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+# Entry Points
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+
+# Certificate Management (Let's Encrypt)
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: admin@33god.com
+      storage: /data/acme.json
+      httpChallenge:
+        entryPoint: web
+      # DNS Challenge for wildcard certs (optional)
+      # dnsChallenge:
+      #   provider: cloudflare
+      #   resolvers:
+      #     - "1.1.1.1:53"
+      #     - "1.0.0.1:53"
+
+# Providers
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: "33god_network"
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+
+# API and Dashboard
+api:
+  dashboard: true
+  debug: false
+
+# Metrics (Prometheus)
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    addRoutersLabels: true
+
+# Access Logs
+accessLog:
+  format: json
+  fields:
+    defaultMode: keep
+    names:
+      ClientUsername: drop
+    headers:
+      defaultMode: keep
+      names:
+        User-Agent: keep
+        Authorization: drop
+        X-API-Key: drop
+
+# Tracing (optional - Jaeger)
+# tracing:
+#   jaeger:
+#     samplingParam: 1.0
+#     localAgentHostPort: "jaeger:6831"
+
+# Ping endpoint for health checks
+ping:
+  entryPoint: traefik

@@ -1,0 +1,146 @@
+"""Traefik dynamic configuration for advanced routing and middleware
+
+This file defines:
+- Custom middleware
+- Advanced routing rules
+- Security headers
+- Rate limiting
+- Circuit breakers
+"""
+
+# HTTP Middleware
+http:
+  middlewares:
+    # Security headers
+    security-headers:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowOriginList:
+          - "https://33god.com"
+          - "https://*.33god.com"
+          - "http://localhost:3000"
+          - "http://localhost:3360"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        frameOptionsValue: "SAMEORIGIN"
+        referrerPolicy: "strict-origin-when-cross-origin"
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+    
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        burst: 100
+        period: "1m"
+        average: 30
+        sourceCriterion:
+          ipStrategy:
+            depth: 1
+    
+    # API rate limiting (more restrictive)
+    api-rate-limit:
+      rateLimit:
+        burst: 50
+        period: "1m" 
+        average: 10
+        sourceCriterion:
+          ipStrategy:
+            depth: 1
+    
+    # CORS for API endpoints
+    api-cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        accessControlAllowOriginList:
+          - "https://33god.com"
+          - "https://*.33god.com"
+          - "http://localhost:3000"
+          - "http://localhost:3360"
+        accessControlAllowHeaders:
+          - "*"
+        accessControlExposeHeaders:
+          - "X-Correlation-ID"
+          - "X-Request-ID"
+        accessControlMaxAge: 86400
+        addVaryHeader: true
+    
+    # Authentication middleware (IP whitelist for admin)
+    admin-auth:
+      ipWhiteList:
+        sourceRange:
+          - "127.0.0.1/32"
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+          - "192.168.0.0/16"
+    
+    # Circuit breaker for resilience
+    circuit-breaker:
+      circuitBreaker:
+        expression: "NetworkErrorRatio() > 0.30"
+        checkPeriod: "3s"
+        fallbackDuration: "10s"
+        recoveryDuration: "3s"
+    
+    # Retry middleware
+    retry-policy:
+      retry:
+        attempts: 3
+        initialInterval: "100ms"
+    
+    # Request ID middleware
+    request-id:
+      headers:
+        customRequestHeaders:
+          X-Request-ID: "{{ .RequestID }}"
+    
+    # Compression
+    gzip-compression:
+      compress:
+        excludedContentTypes:
+          - "text/event-stream"
+
+# TCP Services (for Redis, PostgreSQL if needed)
+tcp:
+  services:
+    redis-service:
+      loadBalancer:
+        servers:
+          - address: "redis:6379"
+    
+    postgres-service:
+      loadBalancer:
+        servers:
+          - address: "postgres:5432"
+
+# TLS Options
+tls:
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_RSA_WITH_AES_128_GCM_SHA256"
+      curvePreferences:
+        - "CurveP521"
+        - "CurveP384"
+      sniStrict: true
