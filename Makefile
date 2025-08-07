@@ -1,3 +1,6 @@
+# THIS MAKEFILE SHOULD BE DEPRECATED. 
+# USE `mise tasks` INSTEAD.
+# 
 .PHONY: help install setup docker-up docker-down migrate dev test clean
 
 help:
@@ -31,7 +34,7 @@ migrate:
 	. .venv/bin/activate && alembic upgrade head
 
 dev:
-	. .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	. .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8687
 
 test:
 	. .venv/bin/activate && pytest
