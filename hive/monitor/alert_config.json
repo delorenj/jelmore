@@ -1,0 +1,119 @@
+{
+  "channels": {
+    "console": {
+      "enabled": true,
+      "severity_threshold": "medium",
+      "cooldown_minutes": 1
+    },
+    "log_file": {
+      "enabled": true,
+      "config": {
+        "log_file": "/home/delorenj/code/projects/33GOD/jelmore/hive/monitor/log/alerts.log"
+      },
+      "severity_threshold": "low",
+      "cooldown_minutes": 0
+    },
+    "webhook": {
+      "enabled": false,
+      "config": {
+        "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+        "timeout": 10
+      },
+      "severity_threshold": "high",
+      "cooldown_minutes": 10
+    },
+    "email": {
+      "enabled": false,
+      "config": {
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "username": "your-email@gmail.com",
+        "password": "your-app-password",
+        "from_email": "jelmore-monitor@yourorg.com",
+        "to_emails": ["admin@yourorg.com", "ops@yourorg.com"]
+      },
+      "severity_threshold": "critical",
+      "cooldown_minutes": 30
+    }
+  },
+  "escalation_policies": {
+    "critical_session_failure": {
+      "name": "Critical Session Failure",
+      "triggers": ["session_timeout", "high_error_rate", "system_failure", "session_stuck"],
+      "escalation_steps": [
+        {
+          "delay_minutes": 5,
+          "channels": ["console", "log_file"]
+        },
+        {
+          "delay_minutes": 15,
+          "channels": ["console", "log_file", "webhook"]
+        },
+        {
+          "delay_minutes": 30,
+          "channels": ["console", "log_file", "webhook", "email"]
+        }
+      ],
+      "max_escalations": 3
+    },
+    "performance_degradation": {
+      "name": "Performance Issues",
+      "triggers": ["slow_processing", "high_memory", "high_cpu", "webhook_spam"],
+      "escalation_steps": [
+        {
+          "delay_minutes": 10,
+          "channels": ["console", "log_file"]
+        },
+        {
+          "delay_minutes": 30,
+          "channels": ["console", "log_file", "webhook"]
+        }
+      ],
+      "max_escalations": 2
+    },
+    "external_service_failure": {
+      "name": "External Service Issues",
+      "triggers": ["nats_disconnected", "api_unreachable", "webhook_endpoint_down"],
+      "escalation_steps": [
+        {
+          "delay_minutes": 2,
+          "channels": ["console", "log_file"]
+        },
+        {
+          "delay_minutes": 10,
+          "channels": ["console", "log_file", "webhook"]
+        }
+      ],
+      "max_escalations": 2
+    },
+    "data_integrity": {
+      "name": "Data and Security Issues",
+      "triggers": ["data_corruption", "security_breach", "unauthorized_access"],
+      "escalation_steps": [
+        {
+          "delay_minutes": 0,
+          "channels": ["console", "log_file", "webhook", "email"]
+        }
+      ],
+      "max_escalations": 1
+    }
+  },
+  "alert_thresholds": {
+    "session_timeout_minutes": 15,
+    "processing_timeout_minutes": 10,
+    "failure_rate_threshold": 20.0,
+    "max_concurrent_sessions": 50,
+    "stuck_session_threshold_minutes": 30,
+    "high_cpu_threshold": 80.0,
+    "high_memory_threshold_gb": 4.0,
+    "webhook_spam_threshold": 10,
+    "rapid_fire_window_minutes": 5
+  },
+  "monitoring_intervals": {
+    "health_check_seconds": 60,
+    "metrics_collection_seconds": 300,
+    "escalation_check_seconds": 60,
+    "cleanup_hours": 1,
+    "log_rotation_hours": 24
+  }
+}

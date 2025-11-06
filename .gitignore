@@ -27,10 +27,24 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-# Environment
+# Environment & Secrets (NEVER COMMIT)
 .env
 .env.local
 .env.*.local
+.env.production
+.env.staging
+.env.development
+*.env
+secrets/
+secret.txt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Security files
+.secrets.baseline
+.gitsecret/
 
 # Database
 *.db
@@ -54,6 +68,7 @@ docker-compose.override.yml
 data/
 temp/
 tmp/
+
 
 # Claude Flow generated files
 .claude/settings.local.json

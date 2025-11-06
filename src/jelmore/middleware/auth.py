@@ -60,23 +60,35 @@ class APIKeyAuth:
                     'permissions': self._get_key_permissions(key_name)
                 }
                 
-        # Add default key if no keys configured (development only)
-        if not api_keys and self.settings.log_level == "DEBUG":
-            default_key = "jelmore-dev-key-12345"
-            api_keys[default_key] = {
-                'name': 'development',
+        # Load keys from settings (environment-based)
+        if self.settings.api_key_admin:
+            api_keys[self.settings.api_key_admin] = {
+                'name': 'admin',
                 'created_at': datetime.utcnow(),
-                'permissions': ['read', 'write', 'admin']
+                'permissions': self._get_key_permissions('admin')
             }
-            logger.warning("Using default API key for development",
-                          key=default_key[:10] + "...")
+        if self.settings.api_key_client:
+            api_keys[self.settings.api_key_client] = {
+                'name': 'client',
+                'created_at': datetime.utcnow(),
+                'permissions': self._get_key_permissions('client')
+            }
+        if self.settings.api_key_readonly:
+            api_keys[self.settings.api_key_readonly] = {
+                'name': 'readonly',
+                'created_at': datetime.utcnow(),
+                'permissions': self._get_key_permissions('readonly')
+            }
                           
         if api_keys:
             logger.info("API keys loaded", 
                        key_count=len(api_keys),
                        key_names=[v['name'] for v in api_keys.values()])
         else:
-            logger.warning("No API keys configured - authentication disabled")
+            if self.settings.debug:
+                logger.warning("No API keys configured - authentication disabled in debug mode")
+            else:
+                logger.error("No API keys configured - this is a security risk in production")
             
         return api_keys
     

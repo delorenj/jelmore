@@ -1,0 +1,112 @@
+{
+  "timestamp": "2025-08-10T07:44:53.259634",
+  "python_version": "3.13.2 (main, Mar 17 2025, 21:02:54) [Clang 20.1.0 ]",
+  "platform": "linux",
+  "sequential": {
+    "unit_sequential": {
+      "description": "Unit tests (sequential)",
+      "command": "python -m pytest tests/unit/ -v --tb=short",
+      "execution_time": 0.4119586944580078,
+      "memory_used_mb": 0,
+      "success": false,
+      "return_code": 4,
+      "stdout_lines": 0,
+      "stderr_lines": 4,
+      "timestamp": "2025-08-10T07:44:53.688622"
+    },
+    "integration_sequential": {
+      "description": "Integration tests (sequential)",
+      "command": "python -m pytest tests/integration/ -v --tb=short",
+      "execution_time": 0.30202674865722656,
+      "memory_used_mb": 0,
+      "success": false,
+      "return_code": 4,
+      "stdout_lines": 0,
+      "stderr_lines": 4,
+      "timestamp": "2025-08-10T07:44:54.013418"
+    },
+    "all_sequential": {
+      "description": "All tests with coverage (sequential)",
+      "command": "python -m pytest tests/ -v --tb=short --cov=src/jelmore",
+      "execution_time": 0.2921481132507324,
+      "memory_used_mb": 0,
+      "success": false,
+      "return_code": 4,
+      "stdout_lines": 0,
+      "stderr_lines": 4,
+      "timestamp": "2025-08-10T07:44:54.322130"
+    },
+    "total_sequential_time": 0
+  },
+  "parallel": {
+    "unit_parallel": {
+      "description": "Unit tests (parallel)",
+      "command": "python -m pytest tests/unit/ -n auto -v --tb=short",
+      "execution_time": 0.3206503391265869,
+      "memory_used_mb": 0,
+      "success": false,
+      "return_code": 4,
+      "stdout_lines": 0,
+      "stderr_lines": 4,
+      "timestamp": "2025-08-10T07:44:54.659777"
+    },
+    "integration_parallel": {
+      "description": "Integration tests (parallel)",
+      "command": "python -m pytest tests/integration/ -n 4 -v --tb=short",
+      "execution_time": 0.3193325996398926,
+      "memory_used_mb": 0,
+      "success": false,
+      "return_code": 4,
+      "stdout_lines": 0,
+      "stderr_lines": 4,
+      "timestamp": "2025-08-10T07:44:55.002575"
+    },
+    "all_parallel_coverage": {
+      "description": "All tests with coverage (parallel)",
+      "command": "python -m pytest tests/ -n auto --dist=worksteal --cov=src/jelmore --cov-report=term-missing -v",
+      "execution_time": 0.3084602355957031,
+      "memory_used_mb": 0,
+      "success": false,
+      "return_code": 4,
+      "stdout_lines": 0,
+      "stderr_lines": 4,
+      "timestamp": "2025-08-10T07:44:55.329993"
+    },
+    "quick_feedback": {
+      "description": "Quick feedback tests",
+      "command": "bash scripts/test-quick.sh",
+      "execution_time": 0.3032872676849365,
+      "memory_used_mb": 0,
+      "success": false,
+      "return_code": 1,
+      "stdout_lines": 4,
+      "stderr_lines": 4,
+      "timestamp": "2025-08-10T07:44:55.650716"
+    },
+    "total_parallel_time": 0
+  },
+  "scripts": {
+    "parallel_script": {
+      "description": "Parallel test script",
+      "command": "bash scripts/test-parallel.sh",
+      "execution_time": 1.179886817932129,
+      "memory_used_mb": 0,
+      "success": true,
+      "return_code": 0,
+      "stdout_lines": 21,
+      "stderr_lines": 16,
+      "timestamp": "2025-08-10T07:44:56.847908"
+    },
+    "coverage_script": {
+      "description": "Coverage analysis script",
+      "command": "bash scripts/test-coverage.sh",
+      "execution_time": 0.3369743824005127,
+      "memory_used_mb": 0,
+      "success": false,
+      "return_code": 1,
+      "stdout_lines": 8,
+      "stderr_lines": 4,
+      "timestamp": "2025-08-10T07:44:57.203509"
+    }
+  }
+}

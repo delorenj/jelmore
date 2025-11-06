@@ -1,0 +1,313 @@
+{
+  "dashboard": {
+    "id": "jelmore-quality-gates",
+    "title": "✅ Jelmore Quality Gates Dashboard",
+    "description": "Monitor quality gate performance, test execution, and quality trends",
+    "refresh_interval_seconds": 30,
+    "theme": "dark",
+    "layout": {
+      "type": "grid", 
+      "columns": 4,
+      "gap": 20
+    },
+    "widgets": [
+      {
+        "id": "quality_overview", 
+        "type": "metric_cards",
+        "title": "✅ Quality Overview",
+        "position": { "row": 1, "col": 1, "span": 4 },
+        "height": 180,
+        "metrics": [
+          {
+            "name": "Overall Pass Rate",
+            "key": "quality_gate_pass_rate",
+            "unit": "%",
+            "thresholds": {
+              "critical": 85,
+              "warning": 92,
+              "good": 97
+            },
+            "format": "percentage",
+            "icon": "✅"
+          },
+          {
+            "name": "Test Execution Time",
+            "key": "test_execution_avg_time",
+            "unit": "seconds", 
+            "thresholds": {
+              "critical": 120,
+              "warning": 60,
+              "good": 30
+            },
+            "format": "duration",
+            "icon": "⏱️"
+          },
+          {
+            "name": "Test Failure Rate",
+            "key": "test_failure_rate",
+            "unit": "%",
+            "thresholds": {
+              "critical": 10,
+              "warning": 5, 
+              "good": 2
+            },
+            "format": "percentage",
+            "icon": "❌"
+          },
+          {
+            "name": "Quality Score",
+            "key": "overall_quality_score",
+            "unit": "/100",
+            "thresholds": {
+              "critical": 70,
+              "warning": 85,
+              "good": 95
+            },
+            "format": "score",
+            "icon": "🏆"
+          }
+        ]
+      },
+      {
+        "id": "quality_trends",
+        "type": "time_series_chart",
+        "title": "📈 Quality Trends (7 days)",
+        "position": { "row": 2, "col": 1, "span": 3 },
+        "height": 300,
+        "data_source": "quality_metrics_history",
+        "time_range": "7d",
+        "series": [
+          {
+            "name": "Pass Rate %",
+            "key": "quality_gate_pass_rate",
+            "color": "#4CAF50",
+            "type": "line",
+            "yAxis": "left",
+            "unit": "%"
+          },
+          {
+            "name": "Test Duration",
+            "key": "test_execution_avg_time", 
+            "color": "#FF9800",
+            "type": "line",
+            "yAxis": "right",
+            "unit": "seconds"
+          },
+          {
+            "name": "Failure Rate %",
+            "key": "test_failure_rate",
+            "color": "#F44336",
+            "type": "area",
+            "yAxis": "left",
+            "unit": "%"
+          }
+        ],
+        "yAxes": {
+          "left": { "label": "Rate %", "min": 0, "max": 100 },
+          "right": { "label": "Duration (s)", "min": 0 }
+        },
+        "annotations": {
+          "target_lines": [
+            { "value": 95, "axis": "left", "label": "Target Pass Rate", "color": "#4CAF50" }
+          ]
+        }
+      },
+      {
+        "id": "test_categories",
+        "type": "donut_chart", 
+        "title": "🧪 Test Categories",
+        "position": { "row": 2, "col": 4, "span": 1 },
+        "height": 300,
+        "data_source": "test_category_breakdown",
+        "show_labels": true,
+        "show_percentages": true,
+        "colors": ["#4CAF50", "#2196F3", "#FF9800", "#9C27B0", "#F44336"]
+      },
+      {
+        "id": "quality_gates_status",
+        "type": "status_grid",
+        "title": "🚪 Quality Gates Status",
+        "position": { "row": 3, "col": 1, "span": 2 },
+        "height": 250,
+        "data_source": "quality_gates",
+        "gates": [
+          {
+            "name": "Code Quality",
+            "checks": [
+              { "name": "Code Coverage", "threshold": 80, "key": "coverage_percent" },
+              { "name": "Linting", "threshold": 0, "key": "lint_errors", "inverse": true },
+              { "name": "Complexity", "threshold": 10, "key": "cyclomatic_complexity", "inverse": true }
+            ]
+          },
+          {
+            "name": "Security Scans",
+            "checks": [
+              { "name": "Vulnerabilities", "threshold": 0, "key": "security_issues", "inverse": true },
+              { "name": "License Compliance", "threshold": 100, "key": "license_compliance" },
+              { "name": "Secrets Detection", "threshold": 0, "key": "exposed_secrets", "inverse": true }
+            ]
+          },
+          {
+            "name": "Performance",
+            "checks": [
+              { "name": "Load Time", "threshold": 2000, "key": "page_load_ms", "inverse": true },
+              { "name": "Memory Usage", "threshold": 100, "key": "memory_usage_mb", "inverse": true },
+              { "name": "API Response", "threshold": 500, "key": "api_response_ms", "inverse": true }
+            ]
+          },
+          {
+            "name": "Tests",
+            "checks": [
+              { "name": "Unit Tests", "threshold": 95, "key": "unit_test_pass_rate" },
+              { "name": "Integration Tests", "threshold": 90, "key": "integration_test_pass_rate" },
+              { "name": "E2E Tests", "threshold": 85, "key": "e2e_test_pass_rate" }
+            ]
+          }
+        ],
+        "status_colors": {
+          "pass": "#4CAF50",
+          "fail": "#F44336",
+          "warning": "#FF9800"
+        }
+      },
+      {
+        "id": "test_execution_breakdown",
+        "type": "waterfall_chart",
+        "title": "⚡ Test Execution Breakdown", 
+        "position": { "row": 3, "col": 3, "span": 2 },
+        "height": 250,
+        "data_source": "test_execution_stages",
+        "show_cumulative": true,
+        "unit": "seconds",
+        "stages": [
+          "Setup",
+          "Unit Tests", 
+          "Integration Tests",
+          "Security Scans",
+          "Performance Tests",
+          "E2E Tests",
+          "Cleanup"
+        ]
+      },
+      {
+        "id": "failure_analysis",
+        "type": "treemap",
+        "title": "🔍 Failure Analysis",
+        "position": { "row": 4, "col": 1, "span": 2 },
+        "height": 200,
+        "data_source": "test_failures",
+        "hierarchy": ["category", "test_suite", "test_case"],
+        "size_metric": "failure_count",
+        "color_metric": "failure_rate",
+        "color_scale": "red"
+      },
+      {
+        "id": "quality_recommendations",
+        "type": "recommendation_list",
+        "title": "💡 Quality Recommendations",
+        "position": { "row": 4, "col": 3, "span": 2 },
+        "height": 200,
+        "data_source": "quality_recommendations",
+        "max_items": 8,
+        "priority_colors": {
+          "high": "#F44336",
+          "medium": "#FF9800",
+          "low": "#4CAF50"
+        },
+        "show_impact": true,
+        "show_effort": true
+      },
+      {
+        "id": "quality_sla_tracking",
+        "type": "sla_tracker",
+        "title": "📊 Quality SLA Tracking",
+        "position": { "row": 5, "col": 1, "span": 4 },
+        "height": 150,
+        "slas": [
+          {
+            "name": "Quality Gate Pass Rate",
+            "target": 95,
+            "current": "quality_gate_pass_rate",
+            "unit": "%",
+            "period": "monthly"
+          },
+          {
+            "name": "Test Execution Time",
+            "target": 300,
+            "current": "test_execution_avg_time", 
+            "unit": "seconds",
+            "period": "monthly",
+            "inverse": true
+          },
+          {
+            "name": "Zero Critical Issues",
+            "target": 0,
+            "current": "critical_issues",
+            "unit": "issues",
+            "period": "monthly",
+            "inverse": true
+          }
+        ],
+        "show_trend": true,
+        "show_forecast": true
+      }
+    ],
+    "alerts": [
+      {
+        "id": "quality_degradation",
+        "name": "Quality Gate Degradation",
+        "condition": "quality_gate_pass_rate < 90",
+        "severity": "high",
+        "notification_channels": ["email", "slack"]
+      },
+      {
+        "id": "test_timeout",
+        "name": "Test Execution Timeout",
+        "condition": "test_execution_avg_time > 600",
+        "severity": "medium",
+        "notification_channels": ["slack"]
+      },
+      {
+        "id": "high_failure_rate",
+        "name": "High Test Failure Rate",
+        "condition": "test_failure_rate > 15",
+        "severity": "critical",
+        "notification_channels": ["email", "slack", "pagerduty"]
+      }
+    ],
+    "filters": [
+      {
+        "id": "time_range",
+        "type": "time_range_picker",
+        "label": "Time Range",
+        "options": ["1h", "6h", "24h", "7d", "30d"],
+        "default": "24h"
+      },
+      {
+        "id": "test_type",
+        "type": "multi_select",
+        "label": "Test Types",
+        "options": ["unit", "integration", "e2e", "performance", "security"],
+        "default": ["unit", "integration", "e2e"]
+      },
+      {
+        "id": "environment",
+        "type": "single_select",
+        "label": "Environment",
+        "options": ["dev", "staging", "production"],
+        "default": "production"
+      }
+    ],
+    "export": {
+      "formats": ["png", "pdf", "json"],
+      "scheduled_reports": {
+        "weekly_quality_report": {
+          "enabled": true,
+          "schedule": "0 9 * * 1",
+          "format": "pdf",
+          "recipients": ["qa@company.com", "engineering@company.com"]
+        }
+      }
+    }
+  }
+}

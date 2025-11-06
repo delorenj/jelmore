@@ -1,0 +1,433 @@
+{
+  "dashboard": {
+    "id": "jelmore-bottleneck-analysis",
+    "title": "🚧 Jelmore Bottleneck Analysis Dashboard", 
+    "description": "Real-time bottleneck detection, impact analysis, and optimization recommendations",
+    "refresh_interval_seconds": 15,
+    "theme": "dark",
+    "layout": {
+      "type": "grid",
+      "columns": 4,
+      "gap": 20
+    },
+    "widgets": [
+      {
+        "id": "bottleneck_overview",
+        "type": "metric_cards",
+        "title": "🚧 Bottleneck Overview",
+        "position": { "row": 1, "col": 1, "span": 4 },
+        "height": 180,
+        "metrics": [
+          {
+            "name": "Active Bottlenecks",
+            "key": "active_bottlenecks_count",
+            "unit": "issues",
+            "thresholds": {
+              "critical": 5,
+              "warning": 2,
+              "good": 0
+            },
+            "format": "integer",
+            "icon": "🚧"
+          },
+          {
+            "name": "Severity Score", 
+            "key": "bottleneck_severity_score",
+            "unit": "/100",
+            "thresholds": {
+              "critical": 75,
+              "warning": 50,
+              "good": 25
+            },
+            "format": "score",
+            "icon": "🔥"
+          },
+          {
+            "name": "Performance Impact",
+            "key": "performance_impact_percent",
+            "unit": "%",
+            "thresholds": {
+              "critical": 30,
+              "warning": 15,
+              "good": 5
+            },
+            "format": "percentage",
+            "icon": "📉"
+          },
+          {
+            "name": "Time to Resolution",
+            "key": "avg_resolution_time_minutes",
+            "unit": "minutes",
+            "thresholds": {
+              "critical": 60,
+              "warning": 30,
+              "good": 15
+            },
+            "format": "duration",
+            "icon": "⏱️"
+          }
+        ]
+      },
+      {
+        "id": "bottleneck_heatmap",
+        "type": "heatmap",
+        "title": "🔥 Bottleneck Heatmap (24h)",
+        "position": { "row": 2, "col": 1, "span": 3 },
+        "height": 300,
+        "data_source": "bottleneck_timeline",
+        "time_range": "24h",
+        "y_axis": {
+          "categories": [
+            "CPU Usage",
+            "Memory Usage", 
+            "Disk I/O",
+            "Network I/O",
+            "Database Queries",
+            "API Responses",
+            "Queue Processing",
+            "External Services"
+          ]
+        },
+        "x_axis": {
+          "type": "time",
+          "interval": "hour"
+        },
+        "color_scale": {
+          "type": "severity",
+          "colors": ["#4CAF50", "#FFC107", "#FF9800", "#F44336", "#B71C1C"]
+        },
+        "cell_size": "auto",
+        "show_values": true
+      },
+      {
+        "id": "critical_bottlenecks",
+        "type": "alert_list",
+        "title": "🚨 Critical Bottlenecks",
+        "position": { "row": 2, "col": 4, "span": 1 },
+        "height": 300,
+        "data_source": "critical_bottlenecks",
+        "filter_severity": ["critical", "high"],
+        "max_items": 10,
+        "show_duration": true,
+        "show_impact": true,
+        "severity_colors": {
+          "critical": "#B71C1C",
+          "high": "#F44336"
+        },
+        "auto_refresh": true,
+        "alert_sound": true
+      },
+      {
+        "id": "bottleneck_trends",
+        "type": "time_series_chart",
+        "title": "📊 Bottleneck Trends (7 days)",
+        "position": { "row": 3, "col": 1, "span": 2 },
+        "height": 250,
+        "data_source": "bottleneck_history",
+        "time_range": "7d",
+        "series": [
+          {
+            "name": "CPU Bottlenecks",
+            "key": "cpu_bottleneck_count",
+            "color": "#F44336",
+            "type": "area",
+            "stack": "bottlenecks"
+          },
+          {
+            "name": "Memory Bottlenecks",
+            "key": "memory_bottleneck_count", 
+            "color": "#FF9800",
+            "type": "area",
+            "stack": "bottlenecks"
+          },
+          {
+            "name": "I/O Bottlenecks",
+            "key": "io_bottleneck_count",
+            "color": "#FFC107",
+            "type": "area", 
+            "stack": "bottlenecks"
+          },
+          {
+            "name": "Service Bottlenecks",
+            "key": "service_bottleneck_count",
+            "color": "#9C27B0",
+            "type": "area",
+            "stack": "bottlenecks"
+          }
+        ],
+        "yAxis": {
+          "label": "Bottleneck Count",
+          "min": 0
+        },
+        "show_legend": true
+      },
+      {
+        "id": "impact_analysis",
+        "type": "bubble_chart",
+        "title": "💥 Impact vs Frequency Analysis",
+        "position": { "row": 3, "col": 3, "span": 2 },
+        "height": 250,
+        "data_source": "bottleneck_impact_analysis",
+        "x_axis": {
+          "label": "Frequency (occurrences/day)",
+          "key": "frequency_per_day",
+          "scale": "linear"
+        },
+        "y_axis": {
+          "label": "Impact Score (0-100)",
+          "key": "impact_score",
+          "scale": "linear"
+        },
+        "bubble_size": {
+          "key": "resolution_difficulty",
+          "min_size": 5,
+          "max_size": 50
+        },
+        "color": {
+          "key": "category",
+          "scheme": "category10"
+        },
+        "show_labels": true,
+        "interactive": true
+      },
+      {
+        "id": "resolution_strategies",
+        "type": "strategy_matrix",
+        "title": "🛠️ Resolution Strategies",
+        "position": { "row": 4, "col": 1, "span": 2 },
+        "height": 300,
+        "data_source": "resolution_strategies",
+        "matrix_axes": {
+          "x": { "label": "Implementation Effort", "scale": ["Low", "Medium", "High"] },
+          "y": { "label": "Expected Impact", "scale": ["Low", "Medium", "High"] }
+        },
+        "strategies": [
+          {
+            "name": "Horizontal Scaling",
+            "effort": "Medium",
+            "impact": "High",
+            "category": "Infrastructure",
+            "estimated_time": "2-4 hours",
+            "cost": "Medium"
+          },
+          {
+            "name": "Database Optimization",
+            "effort": "High",
+            "impact": "High", 
+            "category": "Performance",
+            "estimated_time": "1-2 days",
+            "cost": "Low"
+          },
+          {
+            "name": "Caching Implementation",
+            "effort": "Medium",
+            "impact": "Medium",
+            "category": "Performance",
+            "estimated_time": "4-8 hours", 
+            "cost": "Low"
+          },
+          {
+            "name": "Load Balancing",
+            "effort": "Low",
+            "impact": "Medium",
+            "category": "Infrastructure",
+            "estimated_time": "1-2 hours",
+            "cost": "Medium"
+          }
+        ],
+        "show_tooltips": true,
+        "color_by_category": true
+      },
+      {
+        "id": "resource_utilization",
+        "type": "radar_chart",
+        "title": "🎯 Resource Utilization",
+        "position": { "row": 4, "col": 3, "span": 1 },
+        "height": 300,
+        "data_source": "resource_metrics",
+        "metrics": [
+          { "name": "CPU", "key": "cpu_usage_percent", "max": 100 },
+          { "name": "Memory", "key": "memory_usage_percent", "max": 100 },
+          { "name": "Disk", "key": "disk_usage_percent", "max": 100 },
+          { "name": "Network", "key": "network_usage_percent", "max": 100 },
+          { "name": "Queue", "key": "queue_usage_percent", "max": 100 },
+          { "name": "Cache", "key": "cache_usage_percent", "max": 100 }
+        ],
+        "thresholds": [
+          { "value": 70, "color": "#FFC107", "label": "Warning" },
+          { "value": 85, "color": "#F44336", "label": "Critical" }
+        ],
+        "fill_opacity": 0.3,
+        "show_grid": true
+      },
+      {
+        "id": "optimization_recommendations",
+        "type": "recommendation_cards",
+        "title": "💡 Optimization Recommendations",
+        "position": { "row": 4, "col": 4, "span": 1 },
+        "height": 300,
+        "data_source": "optimization_recommendations",
+        "max_items": 5,
+        "card_fields": [
+          "title",
+          "description", 
+          "priority",
+          "estimated_impact",
+          "implementation_time",
+          "cost_estimate"
+        ],
+        "priority_colors": {
+          "critical": "#B71C1C",
+          "high": "#F44336",
+          "medium": "#FF9800",
+          "low": "#4CAF50"
+        },
+        "show_implementation_status": true,
+        "allow_voting": true
+      },
+      {
+        "id": "bottleneck_timeline",
+        "type": "gantt_chart",
+        "title": "⏰ Bottleneck Timeline & Duration",
+        "position": { "row": 5, "col": 1, "span": 4 },
+        "height": 200,
+        "data_source": "bottleneck_events",
+        "time_range": "24h",
+        "y_axis": "bottleneck_type",
+        "start_time_key": "detected_at",
+        "end_time_key": "resolved_at",
+        "color_key": "severity",
+        "show_current_time": true,
+        "show_duration_labels": true,
+        "color_scheme": {
+          "low": "#FFC107",
+          "medium": "#FF9800", 
+          "high": "#F44336",
+          "critical": "#B71C1C"
+        },
+        "interactive": true
+      },
+      {
+        "id": "performance_correlation",
+        "type": "correlation_matrix",
+        "title": "🔗 Performance Correlation Analysis",
+        "position": { "row": 6, "col": 1, "span": 2 },
+        "height": 250,
+        "data_source": "performance_metrics",
+        "metrics": [
+          "cpu_usage_percent",
+          "memory_usage_percent",
+          "response_time_ms",
+          "throughput_rps",
+          "error_rate_percent",
+          "queue_depth"
+        ],
+        "correlation_threshold": 0.5,
+        "show_values": true,
+        "color_scale": "diverging"
+      },
+      {
+        "id": "automated_actions",
+        "type": "action_log",
+        "title": "🤖 Automated Actions Log",
+        "position": { "row": 6, "col": 3, "span": 2 },
+        "height": 250,
+        "data_source": "automated_actions",
+        "max_items": 20,
+        "columns": [
+          { "key": "timestamp", "label": "Time", "type": "datetime" },
+          { "key": "action_type", "label": "Action", "type": "text" },
+          { "key": "target", "label": "Target", "type": "text" },
+          { "key": "status", "label": "Status", "type": "status" },
+          { "key": "impact", "label": "Impact", "type": "metric" }
+        ],
+        "status_colors": {
+          "success": "#4CAF50",
+          "failed": "#F44336",
+          "pending": "#FF9800"
+        },
+        "show_details": true,
+        "allow_rollback": true
+      }
+    ],
+    "alerts": [
+      {
+        "id": "critical_bottleneck",
+        "name": "Critical Bottleneck Detected",
+        "condition": "bottleneck_severity_score > 80",
+        "severity": "critical",
+        "notification_channels": ["email", "slack", "pagerduty"],
+        "auto_actions": ["scale_up", "notify_oncall"]
+      },
+      {
+        "id": "performance_degradation", 
+        "name": "Performance Degradation",
+        "condition": "performance_impact_percent > 20",
+        "severity": "high",
+        "notification_channels": ["slack", "email"]
+      },
+      {
+        "id": "bottleneck_cascade",
+        "name": "Bottleneck Cascade Risk",
+        "condition": "active_bottlenecks_count > 3",
+        "severity": "high",
+        "notification_channels": ["email", "slack"],
+        "auto_actions": ["enable_circuit_breaker"]
+      }
+    ],
+    "automated_actions": {
+      "scale_up": {
+        "enabled": true,
+        "conditions": ["cpu_usage_percent > 85", "memory_usage_percent > 90"],
+        "action": "increase_replicas",
+        "parameters": { "max_replicas": 10, "step_size": 2 }
+      },
+      "enable_circuit_breaker": {
+        "enabled": true,
+        "conditions": ["error_rate_percent > 15", "response_time_ms > 5000"],
+        "action": "circuit_breaker_open",
+        "parameters": { "timeout_ms": 30000 }
+      },
+      "clear_cache": {
+        "enabled": true,
+        "conditions": ["memory_usage_percent > 95"],
+        "action": "flush_cache",
+        "parameters": { "cache_types": ["redis", "memory"] }
+      }
+    },
+    "filters": [
+      {
+        "id": "time_range",
+        "type": "time_range_picker",
+        "label": "Time Range",
+        "options": ["15m", "1h", "6h", "24h", "7d"],
+        "default": "6h"
+      },
+      {
+        "id": "severity",
+        "type": "multi_select",
+        "label": "Severity Levels",
+        "options": ["low", "medium", "high", "critical"],
+        "default": ["medium", "high", "critical"]
+      },
+      {
+        "id": "category",
+        "type": "multi_select",
+        "label": "Bottleneck Categories",
+        "options": ["cpu", "memory", "io", "network", "database", "services"],
+        "default": ["cpu", "memory", "io", "database"]
+      }
+    ],
+    "export": {
+      "formats": ["png", "pdf", "json"],
+      "scheduled_reports": {
+        "bottleneck_analysis": {
+          "enabled": true,
+          "schedule": "0 8 * * 1",
+          "format": "pdf",
+          "recipients": ["devops@company.com", "engineering@company.com"]
+        }
+      }
+    }
+  }
+}

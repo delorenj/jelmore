@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     postgres_host: str = Field(default="localhost", description="PostgreSQL host")
     postgres_port: int = Field(default=5432, description="PostgreSQL port")
     postgres_user: str = Field(default="jelmore", description="PostgreSQL user")
-    postgres_password: str = Field(default="jelmore_dev", description="PostgreSQL password")
+    postgres_password: str = Field(description="PostgreSQL password (REQUIRED)")
     postgres_db: str = Field(default="jelmore", description="PostgreSQL database")
     database_pool_size: int = Field(default=20, description="Database pool size")
     database_max_overflow: int = Field(default=40, description="Database max overflow")
@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     max_concurrent_sessions: int = Field(default=10, description="Max concurrent sessions")
     session_keepalive_interval: int = Field(default=30, description="Session keepalive check interval (seconds)")
     session_output_buffer_size: int = Field(default=1000, description="Max output lines to buffer")
+    
+    # Session Service Settings (for integrated session management)
+    session_default_timeout_seconds: int = Field(default=1800, description="Default session timeout (30 minutes)")
+    session_cleanup_interval_seconds: int = Field(default=300, description="Session cleanup interval (5 minutes)")
+    session_monitoring_interval_seconds: int = Field(default=60, description="Session timeout monitoring interval (1 minute)")
 
     # Logging
     log_level: str = Field(default="INFO", description="Log level")
@@ -75,6 +80,34 @@ class Settings(BaseSettings):
         default=["*"],
         description="CORS allowed origins",
     )
+    
+    # API Keys (environment-based only)
+    api_key_admin: str = Field(default="", description="Admin API key")
+    api_key_client: str = Field(default="", description="Client API key")
+    api_key_readonly: str = Field(default="", description="Read-only API key")
+    
+    def model_post_init(self, __context) -> None:
+        """Validate required security settings after model initialization"""
+        if not self.postgres_password:
+            raise ValueError(
+                "POSTGRES_PASSWORD environment variable is required. "
+                "Never use hardcoded passwords in production."
+            )
+        
+        # Warn if no API keys are configured (only in non-production)
+        if not any([self.api_key_admin, self.api_key_client, self.api_key_readonly]):
+            if self.debug:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "No API keys configured. Authentication will be disabled. "
+                    "Set API_KEY_ADMIN, API_KEY_CLIENT, or API_KEY_READONLY environment variables."
+                )
+            else:
+                raise ValueError(
+                    "At least one API key must be configured for production. "
+                    "Set API_KEY_ADMIN, API_KEY_CLIENT, or API_KEY_READONLY environment variables."
+                )
 
 
 @lru_cache

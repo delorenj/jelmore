@@ -1,0 +1,24 @@
+{
+  "name": "Bug Fix Workflow",
+  "description": "Debug and fix issues with gptme",
+  "client": "gptme",
+  "mode": "detached",
+  "task": {
+    "template": "bug-fix",
+    "context": {
+      "issue_number": "{{ ISSUE_NUMBER }}",
+      "description": "{{ DESCRIPTION }}"
+    }
+  },
+  "execution": {
+    "model_tier": "reasoning"
+  },
+  "environment": {
+    "worktree_resolver": "imi",
+    "mcp_servers": ["github-mcp", "bloodbank-mcp"]
+  },
+  "observability": {
+    "session_prefix": "bug-fix",
+    "log_path": "/tmp/jelmore/bug-fix-{{ TIMESTAMP }}.log"
+  }
+}

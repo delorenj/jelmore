@@ -9,12 +9,16 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to path
-sys.path.append(str(Path(__file__).parent.parent))
+# Add src directory to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root / "src"))
 
-from app.core.database import Base
-from app.models.session import Session  # Import models to register them
-from app.config import settings
+from jelmore.models.session import Base
+from jelmore.models.session import Session  # Import models to register them
+from jelmore.models.events import Event  # Import events model to register it
+from jelmore.config import get_settings
+
+settings = get_settings()
 
 # this is the Alembic Config object
 config = context.config

@@ -7,8 +7,8 @@ services:
     container_name: jelmore-api
     restart: unless-stopped
     environment:
-      # Database
-      - DATABASE_URL=postgresql+asyncpg://jelmore:${POSTGRES_PASSWORD:-jelmore_dev}@postgres:5432/jelmore
+      # Database (NO fallback credentials - requires POSTGRES_PASSWORD)
+      - DATABASE_URL=postgresql+asyncpg://jelmore:${POSTGRES_PASSWORD}@postgres:5432/jelmore
       - DATABASE_POOL_SIZE=20
       - DATABASE_MAX_OVERFLOW=40
 
@@ -26,10 +26,10 @@ services:
       - API_PORT=8687
       - API_PREFIX=/api/v1
 
-      # Authentication
-      - API_KEY_ADMIN=${API_KEY_ADMIN:-}
-      - API_KEY_CLIENT=${API_KEY_CLIENT:-}
-      - API_KEY_READONLY=${API_KEY_READONLY:-}
+      # Authentication (REQUIRED for production)
+      - API_KEY_ADMIN=${API_KEY_ADMIN}
+      - API_KEY_CLIENT=${API_KEY_CLIENT}
+      - API_KEY_READONLY=${API_KEY_READONLY}
       - API_KEY_HEADER=X-API-Key
 
       # Session Management
@@ -95,10 +95,123 @@ services:
       - proxy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8687/health"]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 20s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: jelmore-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=jelmore
+      - POSTGRES_USER=jelmore
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # Performance optimizations
+      - POSTGRES_INITDB_ARGS=--auth-local=trust --auth-host=md5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - proxy
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=128MB
+      -c effective_cache_size=512MB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.7
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jelmore -d jelmore"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: jelmore-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --tcp-keepalive 300
+      --tcp-backlog 511
+      --timeout 300
+      --databases 16
+      --save 900 1 300 10 60 10000
+      --rdbcompression yes
+      --rdbchecksum yes
+      --maxclients 10000
+    volumes:
+      - redis_data:/data
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+
+  # NATS with JetStream
+  nats:
+    image: nats:latest
+    container_name: jelmore-nats
+    restart: unless-stopped
+    command: [
+      "--jetstream",
+      "--store_dir=/data",
+      "--max_memory_store=1GB",
+      "--max_file_store=10GB",
+      "--port=4222",
+      "--http_port=8222",
+      "--log_time=true",
+      "--log_level=info"
+    ]
+    volumes:
+      - nats_data:/data
+    ports:
+      - "4222:4222"  # NATS protocol
+      - "8222:8222"  # HTTP monitoring
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8222/varz"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "traefik.enable=true"
+      # NATS monitoring interface
+      - "traefik.http.routers.nats-monitor.rule=Host(`nats.jelmore.delo.sh`)"
+      - "traefik.http.routers.nats-monitor.service=nats-monitor"
+      - "traefik.http.routers.nats-monitor.tls=true"
+      - "traefik.http.routers.nats-monitor.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.nats-monitor.middlewares=admin-auth@file,security-headers@file"
+      - "traefik.http.services.nats-monitor.loadbalancer.server.port=8222"
+
+# Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nats_data:
+    driver: local
 
 # Networks
 networks:

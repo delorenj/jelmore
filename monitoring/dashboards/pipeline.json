@@ -1,0 +1,286 @@
+{
+  "dashboard": {
+    "id": "jelmore-pipeline-performance",
+    "title": "🚀 Jelmore Pipeline Performance Dashboard",
+    "description": "Real-time monitoring of Jelmore pipeline performance, bottlenecks, and optimization opportunities",
+    "refresh_interval_seconds": 30,
+    "theme": "dark",
+    "layout": {
+      "type": "grid",
+      "columns": 4,
+      "gap": 20
+    },
+    "widgets": [
+      {
+        "id": "health_overview",
+        "type": "metric_cards",
+        "title": "📊 Health Overview",
+        "position": { "row": 1, "col": 1, "span": 4 },
+        "height": 200,
+        "metrics": [
+          {
+            "name": "Overall Health Score",
+            "key": "overall_health_score",
+            "unit": "%",
+            "thresholds": {
+              "critical": 60,
+              "warning": 80,
+              "good": 95
+            },
+            "format": "percentage",
+            "icon": "💖"
+          },
+          {
+            "name": "Pipeline Velocity",
+            "key": "cards_per_hour", 
+            "unit": "cards/hour",
+            "thresholds": {
+              "critical": 5,
+              "warning": 15,
+              "good": 25
+            },
+            "format": "decimal",
+            "icon": "⚡"
+          },
+          {
+            "name": "Avg Processing Time",
+            "key": "avg_processing_time_seconds",
+            "unit": "seconds",
+            "thresholds": {
+              "critical": 300,
+              "warning": 180,
+              "good": 60
+            },
+            "format": "duration",
+            "icon": "⏱️"
+          },
+          {
+            "name": "Active Bottlenecks",
+            "key": "current_bottlenecks_count",
+            "unit": "issues",
+            "thresholds": {
+              "critical": 5,
+              "warning": 2,
+              "good": 0
+            },
+            "format": "integer",
+            "icon": "🚧"
+          }
+        ]
+      },
+      {
+        "id": "performance_trends",
+        "type": "time_series_chart",
+        "title": "📈 Performance Trends (24h)",
+        "position": { "row": 2, "col": 1, "span": 2 },
+        "height": 300,
+        "data_source": "metrics_history",
+        "time_range": "24h",
+        "series": [
+          {
+            "name": "Processing Time",
+            "key": "avg_processing_time_seconds",
+            "color": "#FF6B6B",
+            "type": "line",
+            "yAxis": "left",
+            "unit": "seconds"
+          },
+          {
+            "name": "Health Score",
+            "key": "overall_health_score",
+            "color": "#4ECDC4",
+            "type": "line",
+            "yAxis": "right",
+            "unit": "%"
+          },
+          {
+            "name": "Cards/Hour",
+            "key": "cards_per_hour",
+            "color": "#45B7D1",
+            "type": "area",
+            "yAxis": "left",
+            "unit": "count"
+          }
+        ],
+        "yAxes": {
+          "left": { "label": "Time/Count", "min": 0 },
+          "right": { "label": "Health %", "min": 0, "max": 100 }
+        }
+      },
+      {
+        "id": "system_resources",
+        "type": "gauge_cluster",
+        "title": "🖥️ System Resources",
+        "position": { "row": 2, "col": 3, "span": 2 },
+        "height": 300,
+        "gauges": [
+          {
+            "name": "CPU Usage",
+            "key": "cpu_usage_percent",
+            "unit": "%",
+            "max": 100,
+            "thresholds": [
+              { "value": 70, "color": "#FFA726" },
+              { "value": 85, "color": "#EF5350" }
+            ],
+            "color": "#4CAF50"
+          },
+          {
+            "name": "Memory Usage", 
+            "key": "memory_usage_percent",
+            "unit": "%",
+            "max": 100,
+            "thresholds": [
+              { "value": 75, "color": "#FFA726" },
+              { "value": 90, "color": "#EF5350" }
+            ],
+            "color": "#2196F3"
+          },
+          {
+            "name": "Disk I/O",
+            "key": "disk_io_usage_percent",
+            "unit": "%",
+            "max": 100,
+            "thresholds": [
+              { "value": 60, "color": "#FFA726" },
+              { "value": 80, "color": "#EF5350" }
+            ],
+            "color": "#9C27B0"
+          }
+        ]
+      },
+      {
+        "id": "stage_performance",
+        "type": "horizontal_bar_chart",
+        "title": "🏗️ Stage Performance",
+        "position": { "row": 3, "col": 1, "span": 2 },
+        "height": 250,
+        "data_source": "stage_transition_times",
+        "sort": "value_desc",
+        "unit": "seconds",
+        "color_scheme": "performance",
+        "show_values": true,
+        "thresholds": {
+          "warning": 60,
+          "critical": 120
+        }
+      },
+      {
+        "id": "bottleneck_detection",
+        "type": "alert_list",
+        "title": "🚧 Active Bottlenecks",
+        "position": { "row": 3, "col": 3, "span": 2 },
+        "height": 250,
+        "data_source": "current_bottlenecks",
+        "max_items": 8,
+        "severity_colors": {
+          "low": "#FFC107",
+          "medium": "#FF9800", 
+          "high": "#F44336",
+          "critical": "#B71C1C"
+        },
+        "show_suggestions": true,
+        "auto_refresh": true
+      },
+      {
+        "id": "quality_metrics",
+        "type": "metric_table",
+        "title": "✅ Quality Metrics",
+        "position": { "row": 4, "col": 1, "span": 2 },
+        "height": 200,
+        "metrics": [
+          {
+            "label": "Quality Gate Pass Rate",
+            "key": "quality_gate_pass_rate",
+            "unit": "%",
+            "format": "percentage",
+            "target": 95
+          },
+          {
+            "label": "Test Execution Time",
+            "key": "test_execution_avg_time",
+            "unit": "seconds",
+            "format": "duration",
+            "target": 30
+          },
+          {
+            "label": "Test Failure Rate",
+            "key": "test_failure_rate", 
+            "unit": "%",
+            "format": "percentage",
+            "target": 2
+          }
+        ]
+      },
+      {
+        "id": "performance_percentiles",
+        "type": "percentile_chart",
+        "title": "📊 Processing Time Percentiles",
+        "position": { "row": 4, "col": 3, "span": 2 },
+        "height": 200,
+        "data_source": "processing_times",
+        "percentiles": [50, 75, 90, 95, 99],
+        "time_range": "1h",
+        "update_interval": 30
+      },
+      {
+        "id": "recent_alerts",
+        "type": "timeline",
+        "title": "🚨 Recent Alerts",
+        "position": { "row": 5, "col": 1, "span": 4 },
+        "height": 150,
+        "data_source": "alert_history",
+        "time_range": "24h",
+        "max_items": 20,
+        "show_severity": true,
+        "group_by_hour": true
+      }
+    ],
+    "filters": [
+      {
+        "id": "time_range",
+        "type": "time_range_picker",
+        "label": "Time Range",
+        "options": ["1h", "6h", "24h", "7d"],
+        "default": "24h"
+      },
+      {
+        "id": "severity_filter",
+        "type": "multi_select",
+        "label": "Alert Severity",
+        "options": ["low", "medium", "high", "critical"],
+        "default": ["medium", "high", "critical"]
+      }
+    ],
+    "annotations": [
+      {
+        "type": "deployment",
+        "data_source": "deployments",
+        "color": "#9C27B0",
+        "icon": "🚀"
+      },
+      {
+        "type": "incident",
+        "data_source": "incidents", 
+        "color": "#F44336",
+        "icon": "⚠️"
+      }
+    ],
+    "auto_refresh": {
+      "enabled": true,
+      "interval": 30,
+      "pause_on_interaction": true
+    },
+    "export": {
+      "formats": ["png", "pdf", "json"],
+      "scheduled_reports": {
+        "daily_summary": {
+          "enabled": true,
+          "time": "09:00",
+          "format": "pdf",
+          "recipients": ["devops@company.com"]
+        }
+      }
+    }
+  }
+}

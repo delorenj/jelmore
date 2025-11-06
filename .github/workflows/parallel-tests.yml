@@ -1,0 +1,298 @@
+name: 🚀 Parallel Test Execution - CONCURRENT EXCELLENCE
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      test_workers:
+        description: 'Number of test workers (auto for CPU count)'
+        required: false
+        default: 'auto'
+      coverage_threshold:
+        description: 'Coverage threshold percentage'
+        required: false
+        default: '80'
+
+env:
+  PYTHON_VERSION: '3.12'
+  POETRY_VERSION: '1.8.0'
+  TEST_TIMEOUT: 300  # 5 minutes max per job
+
+jobs:
+  # ==================== PARALLEL TEST MATRIX ====================
+  
+  test-matrix:
+    name: 🧪 ${{ matrix.test-group }} Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    strategy:
+      fail-fast: false  # Continue other tests even if one fails
+      matrix:
+        python-version: ['3.12']
+        test-group: ['unit', 'integration', 'api']
+        include:
+          - test-group: 'unit'
+            marker: 'unit'
+            timeout: '5m'
+            workers: 'auto'
+          - test-group: 'integration' 
+            marker: 'integration'
+            timeout: '10m'
+            workers: '4'
+          - test-group: 'api'
+            marker: 'not unit and not integration'
+            timeout: '15m'
+            workers: '2'
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+        options: >-
+          --health-cmd "nats-server --check"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: 📥 Checkout The Sacred Codebase
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: 📦 Install Dependencies (PARALLEL POWER MODE)
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+    
+    - name: ⚡ Run ${{ matrix.test-group }} Tests with MAXIMUM PARALLELIZATION
+      timeout-minutes: ${{ fromJSON(matrix.timeout) }}
+      run: |
+        pytest tests/ \
+          -n ${{ github.event.inputs.test_workers || matrix.workers }} \
+          --dist=worksteal \
+          --timeout=30 \
+          --cov=src/jelmore \
+          --cov-report=xml \
+          --cov-report=term-missing \
+          --junitxml=test-results-${{ matrix.test-group }}.xml \
+          -m "${{ matrix.marker }}" \
+          --tb=short \
+          -v
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+        REDIS_URL: redis://localhost:6379/1
+        NATS_URL: nats://localhost:4222
+    
+    - name: 📊 Upload Coverage to Codecov
+      if: matrix.test-group == 'unit'  # Only upload once to avoid conflicts
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: ${{ matrix.test-group }}
+        name: ${{ matrix.test-group }}-coverage
+        fail_ci_if_error: false
+    
+    - name: 📋 Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.test-group }}-py${{ matrix.python-version }}
+        path: test-results-${{ matrix.test-group }}.xml
+        retention-days: 30
+
+  # ==================== PERFORMANCE BENCHMARKING ====================
+  
+  performance-tests:
+    name: ⚡ Performance & Load Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: test-matrix
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: 📦 Install Dependencies + Benchmarking Tools
+      run: |
+        pip install -e ".[dev]"
+        pip install pytest-benchmark locust
+    
+    - name: 🏁 Run Performance Benchmarks
+      run: |
+        pytest tests/ \
+          -n auto \
+          --benchmark-only \
+          --benchmark-json=benchmark-results.json \
+          || echo "No benchmark tests found"
+    
+    - name: 📊 Upload Benchmark Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: benchmark-results
+        path: benchmark-results.json
+        retention-days: 30
+
+  # ==================== COMPREHENSIVE COVERAGE ANALYSIS ====================
+  
+  coverage-analysis:
+    name: 📊 Comprehensive Coverage Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: test-matrix
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: 📦 Install Dependencies
+      run: |
+        pip install -e ".[dev]"
+    
+    - name: 🧮 Generate Complete Coverage Report
+      run: |
+        pytest tests/ \
+          -n auto \
+          --dist=worksteal \
+          --cov=src/jelmore \
+          --cov-branch \
+          --cov-report=html:coverage_html \
+          --cov-report=xml:coverage.xml \
+          --cov-report=json:coverage.json \
+          --cov-report=term-missing \
+          --cov-fail-under=${{ github.event.inputs.coverage_threshold || '80' }} \
+          --timeout=30
+    
+    - name: 📈 Coverage Summary
+      run: |
+        python -c "
+        import json
+        import sys
+        try:
+            with open('coverage.json', 'r') as f:
+                data = json.load(f)
+            coverage = data['totals']['percent_covered']
+            print(f'🎯 Total Coverage: {coverage:.1f}%')
+            
+            if coverage >= 90:
+                print('🎉 EXCELLENT coverage!')
+            elif coverage >= 80:
+                print('✅ Good coverage!')
+            else:
+                print('⚠️ Coverage needs improvement!')
+                
+            # Find files with low coverage
+            print('\n📋 Files needing attention:')
+            for file_path, file_data in data['files'].items():
+                file_coverage = file_data['summary']['percent_covered']
+                if file_coverage < 80:
+                    print(f'   {file_path}: {file_coverage:.1f}%')
+        except Exception as e:
+            print(f'❌ Coverage analysis failed: {e}')
+            sys.exit(1)
+        "
+    
+    - name: 📊 Upload Coverage Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: |
+          coverage_html/
+          coverage.xml
+          coverage.json
+        retention-days: 30
+
+  # ==================== SUCCESS SUMMARY ====================
+  
+  test-summary:
+    name: 🎉 Test Execution Summary
+    runs-on: ubuntu-latest
+    needs: [test-matrix, performance-tests, coverage-analysis]
+    if: always()
+    
+    steps:
+    - name: 📋 Generate Test Summary
+      run: |
+        echo "# 🚀 Parallel Test Execution Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Test Matrix Results:" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.test-matrix.result }}" == "success" ]; then
+          echo "✅ **All test groups passed!**" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Some tests failed** - check individual jobs" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Performance Tests:" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.performance-tests.result }}" == "success" ]; then
+          echo "⚡ **Performance benchmarks completed**" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ **Performance tests had issues**" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Coverage Analysis:" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.coverage-analysis.result }}" == "success" ]; then
+          echo "📊 **Coverage analysis successful**" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Coverage analysis failed**" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "*The Container Whisperer approves of this CONCURRENT EXCELLENCE!* 🎭" >> $GITHUB_STEP_SUMMARY

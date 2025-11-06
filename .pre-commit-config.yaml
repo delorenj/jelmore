@@ -1,0 +1,100 @@
+# Pre-commit hooks for security and code quality
+# Install with: pip install pre-commit && pre-commit install
+
+repos:
+  # Secret Detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: 
+          - '--baseline'
+          - '.secrets.baseline'
+          - '--exclude-files'
+          - '.*\.env\.example$'
+        exclude: >
+          (?x)^(
+              .*\.env\.example|
+              .*\.md|
+              .*package-lock\.json|
+              .*yarn\.lock
+          )$
+
+  # Additional secret scanning with GitGuardian
+  - repo: https://github.com/gitguardian/ggshield
+    rev: v1.25.0
+    hooks:
+      - id: ggshield
+        language: python
+        stages: [commit]
+        args: ['secret', 'scan', 'pre-commit']
+
+  # General code quality
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: check-executables-have-shebangs
+
+  # Python specific
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  # Security linting for Python
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: ['-r', 'src/', '-f', 'json']
+        exclude: 'tests/'
+
+  # Dependency vulnerability scanning
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.2
+    hooks:
+      - id: python-safety-dependencies-check
+        files: requirements.*\.txt$
+
+  # Docker security
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: ['--ignore', 'DL3008', '--ignore', 'DL3009']
+
+  # Environment file validation
+  - repo: local
+    hooks:
+      - id: check-env-example
+        name: Validate .env.example
+        entry: bash -c 'if [ -f .env.example ]; then echo "✅ .env.example exists"; else echo "❌ .env.example missing" && exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: prevent-env-commit
+        name: Prevent .env files from being committed
+        entry: bash -c 'if git diff --cached --name-only | grep -E "\.env$"; then echo "❌ .env files should not be committed!" && exit 1; else echo "✅ No .env files in commit"; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: check-hardcoded-secrets
+        name: Check for hardcoded secrets patterns
+        entry: bash -c 'if git diff --cached | grep -E "(password|secret|key|token).*=.*(dev|test|admin|123)"; then echo "❌ Potential hardcoded secret detected!" && exit 1; else echo "✅ No hardcoded secrets detected"; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+# Configuration
+default_stages: [commit]
+fail_fast: false

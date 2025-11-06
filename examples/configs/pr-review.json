@@ -1,0 +1,26 @@
+{
+  "name": "PR Review Workflow",
+  "description": "Review GitHub PRs with multi-agent Claude Flow swarm",
+  "client": "claude-flow",
+  "mode": "detached",
+  "task": {
+    "template": "/home/delorenj/code/DeLoDocs/AI/Agents/Generic/My Personal PR Review Representative.md",
+    "context": {
+      "pr_number": "{{ PR_NUMBER }}",
+      "repository": "{{ REPO }}"
+    }
+  },
+  "execution": {
+    "strategy": "swarm",
+    "max_agents": 4,
+    "model_tier": "balanced"
+  },
+  "environment": {
+    "worktree_resolver": "imi",
+    "mcp_servers": ["github-mcp", "bloodbank-mcp"]
+  },
+  "observability": {
+    "session_prefix": "pr-review",
+    "log_path": "/tmp/jelmore/pr-review-{{ TIMESTAMP }}.log"
+  }
+}

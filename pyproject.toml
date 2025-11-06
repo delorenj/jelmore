@@ -19,13 +19,24 @@ dependencies = [
     "websockets>=14.0",
     "structlog>=24.0.0",
     "python-multipart>=0.0.20",
+    "click>=8.0.0",
+    "typer>=0.9.0",
+    "rich>=10.0.0",
+    "shellingham>=1.3.0",
 ]
+
+[project.scripts]
+jelmore = "jelmore.cli.main:app"
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=5.0.0",
+    "pytest-xdist>=3.6.0",
+    "pytest-benchmark>=4.0.0",
+    "pytest-timeout>=2.3.1",
+    "pytest-mock>=3.14.0",
     "black>=24.0.0",
     "ruff>=0.8.0",
     "mypy>=1.0.0",
@@ -53,3 +64,29 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+minversion = "8.0"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+    "--cov=src/jelmore",
+    "--cov-report=term-missing",
+    "--cov-report=html:coverage_html",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+    "--timeout=30",
+]
+# Test grouping for parallel execution
+markers = [
+    "unit: Unit tests that run quickly",
+    "integration: Integration tests that may be slower", 
+    "e2e: End-to-end tests that require full system",
+    "slow: Tests that take longer than 5 seconds",
+    "redis: Tests requiring Redis connection",
+    "nats: Tests requiring NATS connection",
+    "database: Tests requiring database connection",
+]
+# Parallel execution configuration (handled by pytest-xdist)
+timeout = 30
+timeout_method = "thread"

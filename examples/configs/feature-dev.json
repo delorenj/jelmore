@@ -1,0 +1,24 @@
+{
+  "name": "Feature Development",
+  "description": "Implement new feature with Claude Code",
+  "client": "claude",
+  "mode": "detached",
+  "task": {
+    "template": "feature-implementation",
+    "context": {
+      "feature_name": "{{ FEATURE_NAME }}",
+      "requirements": "{{ REQUIREMENTS }}"
+    }
+  },
+  "execution": {
+    "model_tier": "balanced"
+  },
+  "environment": {
+    "worktree_resolver": "imi",
+    "mcp_servers": ["obsidian-mcp", "bloodbank-mcp"]
+  },
+  "observability": {
+    "session_prefix": "feature-dev",
+    "log_path": "/tmp/jelmore/feature-dev-{{ TIMESTAMP }}.log"
+  }
+}

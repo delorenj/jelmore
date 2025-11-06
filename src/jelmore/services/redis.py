@@ -41,3 +41,32 @@ def get_redis() -> redis.Redis:
     if not redis_client:
         raise RuntimeError("Redis not initialized")
     return redis_client
+
+
+async def get_redis_client() -> redis.Redis:
+    """Get Redis client (async version)"""
+    if not redis_client:
+        raise RuntimeError("Redis not initialized")
+    return redis_client
+
+
+async def get_redis_stats():
+    """Get Redis statistics"""
+    if not redis_client:
+        return {"error": "Redis not initialized"}
+    
+    try:
+        info = await redis_client.info()
+        return {
+            "connected_clients": info.get("connected_clients", 0),
+            "used_memory": info.get("used_memory", 0),
+            "used_memory_human": info.get("used_memory_human", "0B"),
+            "keyspace_hits": info.get("keyspace_hits", 0),
+            "keyspace_misses": info.get("keyspace_misses", 0),
+            "total_commands_processed": info.get("total_commands_processed", 0),
+            "uptime_in_seconds": info.get("uptime_in_seconds", 0),
+            "redis_version": info.get("redis_version", "unknown")
+        }
+    except Exception as e:
+        logger.error("Failed to get Redis stats", error=str(e))
+        return {"error": str(e)}
