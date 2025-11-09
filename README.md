@@ -1,144 +1,112 @@
-# Jelmore - Claude Code Session Manager
+# Jelmore - LLM Execution Abstraction Layer
 
-> FastAPI service that exposes the claude-code SDK to allow spawning personal account token-authenticated long-lived Claude Code sessions via HTTP request.
-
-## Overview
-
-Jelmore is the foundational runtime layer for the 33GOD agentic pipeline system. It provides HTTP API access to Claude Code, enabling programmatic management of AI coding sessions with comprehensive event tracking and state management.
+Jelmore is a powerful and flexible LLM execution abstraction layer designed for convention-over-configuration task execution. It provides a dual interface—a comprehensive REST API and a versatile command-line interface (CLI)—for managing and interacting with long-running LLM tasks.
 
 ## Features
 
-- 🚀 **Persistent Sessions**: Long-lived Claude Code sessions that stay active until explicitly terminated
-- 📊 **Real-time State Tracking**: Monitor session status (active/idle/waiting for input)
-- 📁 **Directory Tracking**: Track current working directory and changes
-- 🔔 **Event Publishing**: All session events published to NATS for consumption by other services
-- 🌊 **Output Streaming**: WebSocket support for real-time output streaming
-- 💾 **Dual Storage**: PostgreSQL for persistence + Redis for active state caching
-- 🔄 **Session Management**: Create, list, terminate, and send input to sessions
+- **Dual Interface**: A comprehensive REST API for programmatic access and a powerful CLI for interactive use.
+- **Multi-Provider Support**: Seamlessly switch between different LLM providers like Claude, OpenAI, and more.
+- **Advanced Session Management**: Create, manage, and interact with long-running, persistent LLM sessions.
+- **Real-time Streaming**: WebSocket and Server-Sent Events (SSE) for real-time output streaming.
+- **Detached Execution**: Run tasks in the background using Zellij for detached, long-running sessions.
+- **Comprehensive Monitoring**: Health checks, metrics, and event publishing for robust monitoring.
+- **Extensible and Configurable**: Easily extendable to support new providers and highly configurable to fit your workflow.
 
-## Tech Stack
+## Architecture
 
-- **Framework**: FastAPI (Python 3.12+)
-- **Database**: PostgreSQL 16 + Redis 7
-- **Message Bus**: NATS 2.10 with JetStream
-- **Process Management**: asyncio subprocess
-- **Container**: Docker + Docker Compose
+Jelmore is built on a modern, robust tech stack designed for scalability and performance:
 
-## Quick Start
+- **Framework**: FastAPI for the asynchronous REST API and Typer for the CLI.
+- **Database**: PostgreSQL for persistent storage and Redis for caching and real-time data.
+- **Message Bus**: NATS for asynchronous event publishing and inter-service communication.
+- **Containerization**: Docker and Docker Compose for easy setup and deployment.
+
+## Getting Started
 
 ### Prerequisites
 
-- Python 3.12+ (managed via `mise`)
+- Python 3.12+
 - Docker and Docker Compose
-- Claude Code CLI installed and authenticated
-- Your Anthropic account with Max plan
+- An LLM provider CLI (e.g., Claude CLI) installed and authenticated
 
 ### Setup
 
-1. **Clone and navigate to the project**:
-```bash
-cd /home/delorenj/code/projects/33GOD/jelmore
-```
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/jelmore.git
+   cd jelmore
+   ```
 
 2. **Run the setup script**:
-```bash
-./setup.sh
-```
+   ```bash
+   ./setup.sh
+   ```
 
 3. **Start the infrastructure**:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Run database migrations**:
+   ```bash
+   alembic upgrade head
+   ```
+
+5. **Start the API service**:
+   ```bash
+   uvicorn jelmore.main:app --reload --port 8000
+   ```
+
+## Usage
+
+### API
+
+The REST API provides programmatic access to Jelmore's session management features.
+
+#### Endpoints
+
+- `POST /api/v1/sessions`: Create a new session.
+- `GET /api/v1/sessions/{session_id}`: Get session details.
+- `GET /api/v1/sessions`: List all sessions.
+- `DELETE /api/v1/sessions/{session_id}`: Terminate a session.
+- `POST /api/v1/sessions/{session_id}/input`: Send input to a waiting session.
+- `GET /api/v1/sessions/{session_id}/output`: Get the current session output.
+- `GET /api/v1/sessions/{session_id}/stream`: Stream session output via SSE.
+- `WS /api/v1/sessions/{session_id}/ws`: Connect to a session via WebSocket.
+
+#### Example: Create a new session
+
 ```bash
-docker-compose up -d
-```
-
-4. **Configure environment**:
-```bash
-cp .env.example .env
-# Edit .env with your settings
-```
-
-5. **Run database migrations**:
-```bash
-alembic upgrade head
-```
-
-6. **Start the service**:
-```bash
-uvicorn app.main:app --reload --port 8000
-```
-
-## API Endpoints
-
-### Session Management
-
-- `POST /api/v1/session` - Create a new session
-- `GET /api/v1/session/{id}` - Get session details
-- `GET /api/v1/sessions` - List all sessions
-- `DELETE /api/v1/session/{id}` - Terminate a session
-- `POST /api/v1/session/{id}/input` - Send input to waiting session
-- `WS /api/v1/session/{id}/stream` - Stream session output
-
-### Example Usage
-
-```bash
-# Create a new session
-curl -X POST http://localhost:8000/api/v1/session \
+curl -X POST http://localhost:8000/api/v1/sessions \
   -H "Content-Type: application/json" \
-  -d '{"query": "Help me create a Python FastAPI application"}'
-
-# Response:
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "active",
-  "current_directory": "/home/user/projects",
-  "created_at": "2025-08-06T12:00:00",
-  "last_activity": "2025-08-06T12:00:01",
-  "output_buffer_size": 5
-}
+  -H "Authorization: Bearer your-api-key" \
+  -d '{
+    "query": "Help me create a Python FastAPI application",
+    "provider": "claude",
+    "model": "claude-3-opus-20240229"
+  }'
 ```
 
-## Event Schema
+### CLI
 
-All events are published to NATS with the following structure:
+The `jelmore` CLI provides a powerful and convenient way to interact with the system from the command line.
 
-```json
-{
-  "event_type": "session.state_changed",
-  "session_id": "550e8400-e29b-41d4-a716-446655440000",
-  "timestamp": "2025-08-06T12:00:00Z",
-  "payload": {
-    "from": "active",
-    "to": "waiting_input"
-  }
-}
-```
+#### Commands
 
-### Event Types
+- `jelmore execute`: Execute a task with an LLM client.
+- `jelmore session`: Manage execution sessions (list, status, attach, logs, kill).
+- `jelmore config`: Manage configuration profiles.
+- `jelmore status`: Get the status of an execution.
 
-- `session.created` - New session created
-- `session.state_changed` - Session state transition
-- `session.directory_changed` - Working directory changed
-- `session.file_modified` - File system changes detected
-- `session.git_activity` - Git operations performed
-- `session.terminated` - Session ended
+#### Example: Execute a task
 
-## Development
-
-### Running Tests
 ```bash
-pytest
+# Simple inline prompt
+jelmore execute -p "Fix the login bug" --client claude
+
+# Task from a file with auto context
+jelmore execute -f task.md --auto
+
+# Using a pre-configured profile
+jelmore execute --profile pr-review
 ```
-
-### Code Quality
-```bash
-black app/
-ruff check app/
-mypy app/
-```
-
-### API Documentation
-
-Once running, visit:
-- Swagger UI: http://localhost:8000/api/v1/docs
-- ReDoc: http://localhost:8000/api/v1/redoc
-
-## Architecture
