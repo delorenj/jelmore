@@ -1,219 +1,44 @@
+version: "3.9"
+
 services:
-  # Jelmore API service
-  jelmore:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: jelmore-api
-    restart: unless-stopped
-    environment:
-      # Database (NO fallback credentials - requires POSTGRES_PASSWORD)
-      - DATABASE_URL=postgresql+asyncpg://jelmore:${POSTGRES_PASSWORD}@postgres:5432/jelmore
-      - DATABASE_POOL_SIZE=20
-      - DATABASE_MAX_OVERFLOW=40
-
-      # Redis
-      - REDIS_URL=redis://redis:6379/0
-      - REDIS_MAX_CONNECTIONS=50
-
-      # NATS
-      - NATS_URL=nats://nats:4222
-      - NATS_CLUSTER_ID=jelmore-cluster
-      - NATS_CLIENT_ID=jelmore-api
-
-      # API Configuration
-      - API_HOST=0.0.0.0
-      - API_PORT=8687
-      - API_PREFIX=/api/v1
-
-      # Authentication (REQUIRED for production)
-      - API_KEY_ADMIN=${API_KEY_ADMIN}
-      - API_KEY_CLIENT=${API_KEY_CLIENT}
-      - API_KEY_READONLY=${API_KEY_READONLY}
-      - API_KEY_HEADER=X-API-Key
-
-      # Session Management
-      - MAX_CONCURRENT_SESSIONS=50
-      - SESSION_CLEANUP_INTERVAL_SECONDS=300
-      - SESSION_DEFAULT_TIMEOUT_SECONDS=7200
-
-      # Logging
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_FORMAT=json
-
-      # CORS
-      - CORS_ORIGINS=https://delo.sh,https://*.delo.sh,http://localhost,http://localhost:3000,http://localhost:3360
-
-      # Claude Code
-      - CLAUDE_CODE_BIN=claude
-      - CLAUDE_CODE_MAX_TURNS=20
-      - CLAUDE_CODE_TIMEOUT_SECONDS=600
-    volumes:
-      - ./logs:/app/logs
-    labels:
-      - "traefik.enable=true"
-      # HTTP Router
-      - "traefik.http.routers.jelmore.rule=Host(`jelmore.delo.sh`) || Host(`api.jelmore.delo.sh`) || Host(`delo.sh`)"
-      - "traefik.http.routers.jelmore.service=jelmore"
-      - "traefik.http.routers.jelmore.tls=true"
-      - "traefik.http.routers.jelmore.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.jelmore.middlewares=security-headers@file,rate-limit@file,gzip-compression@file"
-
-      # API Router (more restrictive)
-      - "traefik.http.routers.jelmore-api.rule=(Host(`jelmore.delo.sh`) || Host(`api.jelmore.delo.sh`) || Host(`jelmore.delo.sh`)) && PathPrefix(`/api/`)"
-      - "traefik.http.routers.jelmore-api.service=jelmore"
-      - "traefik.http.routers.jelmore-api.tls=true"
-      - "traefik.http.routers.jelmore-api.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.jelmore-api.middlewares=security-headers@file,api-rate-limit@file,api-cors@file,gzip-compression@file,circuit-breaker@file"
-      - "traefik.http.routers.jelmore-api.priority=100"
-
-      # Health Check Router (no auth, minimal middleware)
-      - "traefik.http.routers.jelmore-health.rule=(Host(`jelmore.local`) || Host(`api.jelmore.delo.sh`) || Host(`jelmore.delo.sh`)) && Path(`/health`)"
-      - "traefik.http.routers.jelmore-health.service=jelmore"
-      - "traefik.http.routers.jelmore-health.middlewares=security-headers@file"
-      - "traefik.http.routers.jelmore-health.priority=200"
-
-      # Service Configuration
-      - "traefik.http.routers.jelmore-health.rule=(Host(`jelmore.local`) || Host(`api.jelmore.delo.sh`) || Host(`jelmore.delo.sh`)) && Path(`/health`)"
-      - "traefik.http.services.jelmore.loadbalancer.server.port=8687"
-      - "traefik.http.services.jelmore.loadbalancer.healthcheck.path=/health"
-      - "traefik.http.services.jelmore.loadbalancer.healthcheck.interval=10s"
-      - "traefik.http.services.jelmore.loadbalancer.healthcheck.timeout=5s"
-      - "traefik.http.services.jelmore.loadbalancer.healthcheck.scheme=http"
-
-      # Load Balancer Settings
-      - "traefik.http.services.jelmore.loadbalancer.sticky.cookie=true"
-      - "traefik.http.services.jelmore.loadbalancer.sticky.cookie.name=jelmore_session"
-      - "traefik.http.services.jelmore.loadbalancer.sticky.cookie.secure=true"
-      - "traefik.http.services.jelmore.loadbalancer.sticky.cookie.httponly=true"
-
-      # Metrics and Monitoring
-      - "traefik.http.routers.jelmore-metrics.rule=(Host(`jelmore.local`) || Host(`api.jelmore.delo.sh`)) && Path(`/metrics`)"
-      - "traefik.http.routers.jelmore-metrics.service=jelmore"
-      - "traefik.http.routers.jelmore-metrics.middlewares=admin-auth@file"
-    networks:
-      - proxy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8687/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
-  # PostgreSQL Database
-  postgres:
-    image: postgres:16-alpine
-    container_name: jelmore-postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=jelmore
-      - POSTGRES_USER=jelmore
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      # Performance optimizations
-      - POSTGRES_INITDB_ARGS=--auth-local=trust --auth-host=md5
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    networks:
-      - proxy
-    command: >
-      postgres
-      -c max_connections=200
-      -c shared_buffers=128MB
-      -c effective_cache_size=512MB
-      -c maintenance_work_mem=64MB
-      -c checkpoint_completion_target=0.7
-      -c wal_buffers=16MB
-      -c default_statistics_target=100
-      -c random_page_cost=1.1
-      -c effective_io_concurrency=200
-      -c work_mem=4MB
-      -c min_wal_size=1GB
-      -c max_wal_size=4GB
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jelmore -d jelmore"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
-
-  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: jelmore-redis
-    restart: unless-stopped
-    command: >
-      redis-server
-      --appendonly yes
-      --maxmemory 512mb
-      --maxmemory-policy allkeys-lru
-      --tcp-keepalive 300
-      --tcp-backlog 511
-      --timeout 300
-      --databases 16
-      --save 900 1 300 10 60 10000
-      --rdbcompression yes
-      --rdbchecksum yes
-      --maxclients 10000
+    ports:
+      - "6379:6379"
     volumes:
-      - redis_data:/data
-    networks:
-      - proxy
+      - redis-data:/data
+    command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 2s
-      retries: 3
-      start_period: 5s
-
-  # NATS with JetStream
-  nats:
-    image: nats:latest
-    container_name: jelmore-nats
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
-    command: [
-      "--jetstream",
-      "--store_dir=/data",
-      "--max_memory_store=1GB",
-      "--max_file_store=10GB",
-      "--port=4222",
-      "--http_port=8222",
-      "--log_time=true",
-      "--log_level=info"
-    ]
-    volumes:
-      - nats_data:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: jelmore-rabbitmq
     ports:
-      - "4222:4222"  # NATS protocol
-      - "8222:8222"  # HTTP monitoring
-    networks:
-      - proxy
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: jelmore
+      RABBITMQ_DEFAULT_PASS: jelmore_dev
+      RABBITMQ_DEFAULT_VHOST: /jelmore
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8222/varz"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
-      start_period: 5s
-    labels:
-      - "traefik.enable=true"
-      # NATS monitoring interface
-      - "traefik.http.routers.nats-monitor.rule=Host(`nats.jelmore.delo.sh`)"
-      - "traefik.http.routers.nats-monitor.service=nats-monitor"
-      - "traefik.http.routers.nats-monitor.tls=true"
-      - "traefik.http.routers.nats-monitor.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.nats-monitor.middlewares=admin-auth@file,security-headers@file"
-      - "traefik.http.services.nats-monitor.loadbalancer.server.port=8222"
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
-# Volumes
 volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-  nats_data:
-    driver: local
+  redis-data:
+  rabbitmq-data:
 
-# Networks
 networks:
-  proxy:
-    external: true
+  default:
+    name: jelmore-network

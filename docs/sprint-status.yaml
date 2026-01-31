@@ -1,0 +1,141 @@
+version: "6.0.0"
+project_name: "jelmore"
+project_level: 1
+current_sprint: 1
+sprint_plan_path: "docs/sprint-plan-jelmore-2026-01-29.md"
+plane:
+  workspace: "33god"
+  project_id: "1305e4d7-04c3-4376-8180-8d918af94c21"
+  board_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/"
+
+sprints:
+  - sprint_number: 1
+    start_date: "2026-01-29"
+    end_date: "2026-02-11"
+    capacity_points: 30
+    committed_points: 31
+    completed_points: 5
+    status: "in_progress"
+    goal: "Deliver working Claude Code integration with CLI interface"
+    stories:
+      - story_id: "STORY-001"
+        title: "Foundation & Project Structure"
+        points: 5
+        priority: "must-have"
+        type: "infrastructure"
+        status: "completed"
+        assigned_to: "Developer"
+        completion_date: "2026-01-29"
+        plane_ticket_id: "5a6bfaee-22a7-4bda-9f5c-392cb176dda0"
+        plane_sequence: 6
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-6"
+      - story_id: "STORY-002"
+        title: "Command System Core"
+        points: 5
+        priority: "must-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "8a29310c-201b-48b3-a057-d23dbf8c4219"
+        plane_sequence: 7
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-7"
+      - story_id: "STORY-003"
+        title: "Claude Provider Integration"
+        points: 8
+        priority: "must-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "1a60a31c-cfb8-4dff-84a3-bd0f7632496b"
+        plane_sequence: 8
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-8"
+      - story_id: "STORY-004"
+        title: "Session Management"
+        points: 5
+        priority: "must-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "3250732e-bcf5-4f32-9eac-85c1a1a79654"
+        plane_sequence: 9
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-9"
+      - story_id: "STORY-005"
+        title: "Event-Driven System"
+        points: 8
+        priority: "must-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "d9761e1e-69ae-43a9-918a-e67e9d6b2243"
+        plane_sequence: 10
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-10"
+
+  - sprint_number: 2
+    start_date: "2026-02-12"
+    end_date: "2026-02-25"
+    capacity_points: 30
+    committed_points: 28
+    completed_points: 0
+    status: "not_started"
+    goal: "Complete CLI, resilience features, and multi-provider support"
+    stories:
+      - story_id: "STORY-006"
+        title: "CLI Interface"
+        points: 5
+        priority: "should-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "00bb0163-9ed4-47aa-af79-5ed08f453590"
+        plane_sequence: 11
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-11"
+      - story_id: "STORY-007"
+        title: "Executor & Retry Logic"
+        points: 5
+        priority: "should-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "a38eb44a-116b-46f7-a32b-5f8273179e98"
+        plane_sequence: 12
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-12"
+      - story_id: "STORY-008"
+        title: "Hook System"
+        points: 5
+        priority: "should-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "6ff8c727-d1e1-4de4-a3ca-ce953db4cbd9"
+        plane_sequence: 13
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-13"
+      - story_id: "STORY-009"
+        title: "Cross-Provider Session Search"
+        points: 5
+        priority: "could-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "c3218c33-8827-48c7-b57f-992f4d592b89"
+        plane_sequence: 14
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-14"
+      - story_id: "STORY-010"
+        title: "Additional Providers & Observability"
+        points: 8
+        priority: "could-have"
+        type: "feature"
+        status: "not_started"
+        assigned_to: null
+        plane_ticket_id: "b2105fa1-ee7b-400d-8e62-f2d8a366d43c"
+        plane_sequence: 15
+        plane_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/?issue=JELM-15"
+
+velocity:
+  sprint_1: null  # Will be filled when sprint completes
+  sprint_2: null
+  rolling_average: null
+
+team:
+  size: 1
+  sprint_length_weeks: 2
+  capacity_per_sprint: 30

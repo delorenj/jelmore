@@ -1,1 +1,1 @@
-"""Jelmore CLI package"""
+"""CLI entrypoint for Jelmore."""

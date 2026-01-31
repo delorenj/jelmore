@@ -1,0 +1,111 @@
+# Jelmore mise configuration
+# https://mise.jdx.dev/
+
+[env]
+JELMORE_ENVIRONMENT = "development"
+JELMORE_LOG_LEVEL = "DEBUG"
+JELMORE_LOG_FORMAT = "console"
+
+[tools]
+python = "3.12"
+uv = "latest"
+
+[tasks.setup]
+description = "Initial project setup"
+run = """
+uv sync
+uv run pre-commit install || true
+"""
+
+[tasks.dev]
+description = "Start development environment"
+depends = ["docker:up"]
+run = """
+echo "Development environment ready!"
+echo "Redis: localhost:6379"
+echo "RabbitMQ: localhost:5672 (UI: http://localhost:15672)"
+echo ""
+echo "Run 'mise run cli -- --help' to see available commands"
+"""
+
+[tasks.cli]
+description = "Run Jelmore CLI"
+run = "uv run jelmore"
+
+[tasks.test]
+description = "Run tests with pytest"
+run = "uv run pytest tests/ -v"
+
+[tasks."test:cov"]
+description = "Run tests with coverage"
+run = "uv run pytest tests/ -v --cov=src/jelmore --cov-report=term-missing --cov-report=html"
+
+[tasks."test:watch"]
+description = "Run tests in watch mode"
+run = "uv run ptw tests/ -- -v"
+
+[tasks.lint]
+description = "Run linting checks"
+run = """
+uv run ruff check src/ tests/
+uv run ruff format --check src/ tests/
+"""
+
+[tasks."lint:fix"]
+description = "Fix linting issues"
+run = """
+uv run ruff check --fix src/ tests/
+uv run ruff format src/ tests/
+"""
+
+[tasks.typecheck]
+description = "Run type checking with mypy"
+run = "uv run mypy src/jelmore"
+
+[tasks.check]
+description = "Run all checks (lint + typecheck + test)"
+depends = ["lint", "typecheck", "test"]
+
+[tasks."docker:up"]
+description = "Start Docker services (Redis + RabbitMQ)"
+run = "docker compose up -d"
+
+[tasks."docker:down"]
+description = "Stop Docker services"
+run = "docker compose down"
+
+[tasks."docker:logs"]
+description = "View Docker service logs"
+run = "docker compose logs -f"
+
+[tasks."docker:reset"]
+description = "Reset Docker services (remove volumes)"
+run = """
+docker compose down -v
+docker compose up -d
+"""
+
+[tasks."docker:status"]
+description = "Check Docker service status"
+run = "docker compose ps"
+
+[tasks.clean]
+description = "Clean build artifacts"
+run = """
+rm -rf dist/ build/ .eggs/ *.egg-info/
+rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/
+rm -rf htmlcov/ .coverage coverage.xml
+find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+"""
+
+[tasks.build]
+description = "Build the package"
+run = "uv build"
+
+[tasks."docs:serve"]
+description = "Serve documentation locally"
+run = "uv run mkdocs serve"
+
+[tasks."docs:build"]
+description = "Build documentation"
+run = "uv run mkdocs build"

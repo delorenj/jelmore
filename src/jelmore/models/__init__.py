@@ -1,6 +1,22 @@
-"""Database models for Jelmore"""
+"""Pydantic models for core Jelmore entities."""
 
-from .session import Base, Session, SessionStatus
-from .events import Event, EventType
+from jelmore.models.commands import (
+    AgentPromptPayload,
+    CommandResult,
+    ContinuationMode,
+    HookConfig,
+    SideEffect,
+    SideEffectType,
+)
+from jelmore.models.sessions import Session, SessionMetadata
 
-__all__ = ["Base", "Session", "SessionStatus", "Event", "EventType"]
+__all__ = [
+    "AgentPromptPayload",
+    "CommandResult",
+    "ContinuationMode",
+    "HookConfig",
+    "Session",
+    "SessionMetadata",
+    "SideEffect",
+    "SideEffectType",
+]

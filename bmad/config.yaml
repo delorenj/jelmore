@@ -1,0 +1,40 @@
+# BMAD Method v6 - Project Configuration
+# Updated: 2026-01-26
+
+project_name: "jelmore"
+project_type: "api"  # CLI tool - unified interface for agentic coders
+project_level: 1  # 0-4 (0=single story, 1=1-10 stories, 2=5-15, 3=12-40, 4=40+)
+
+# Project Context (from kickoff notes)
+description: "CLI tool providing unified interface for multiple agentic coders (Claude Code, Gemini CLI, Codex). Event-driven architecture with provider abstraction, session management (continue/resume), and cross-provider session search."
+
+# Initial Scope
+initial_providers:
+  - "Claude Code"
+  - "Gemini CLI"
+  - "Codex"
+
+# Architecture Principles
+architecture_notes: "High modularity, low code duplication, Gang of Four patterns (creational, behavioral, structural). Event-driven with pure event bus integration."
+
+# Output folder (relative to project root)
+output_folder: "docs"
+
+# Module-specific settings
+bmm:
+  workflow_status_file: "docs/bmm-workflow-status.yaml"
+  sprint_status_file: "docs/sprint-status.yaml"
+
+# Path configuration
+paths:
+  docs: "docs"
+  stories: "docs/stories"
+  tests: "tests"
+
+# Plane Integration
+plane:
+  workspace: "33god"
+  project_id: "1305e4d7-04c3-4376-8180-8d918af94c21"
+  board_url: "https://plane.delo.sh/33god/projects/1305e4d7-04c3-4376-8180-8d918af94c21/issues/"
+  initialized: true
+  initialized_date: "2026-01-29"
